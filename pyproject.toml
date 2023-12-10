@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "python-audio"
+version = "0.1.0"
+description = ""
+authors = ["Mayank Sinha <sinha.mayank900@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+soundfile = "^0.12.1"
+numpy = "^1.26.2"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
