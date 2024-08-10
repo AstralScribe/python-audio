@@ -1,3 +1,7 @@
 # Folders
-venv/
+.venv/
 __pycache__/
+
+
+# Files
+*.lock
