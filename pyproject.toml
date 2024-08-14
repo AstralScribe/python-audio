@@ -6,7 +6,7 @@ authors = [
     { name = "Mayank Sinha", email = "sinha.mayank900@gmail.com" }
 ]
 dependencies = [
-    "pybind11>=2.13.1",
+    "pybind11>=2.13.3",
 ]
 readme = "README.md"
 requires-python = ">= 3.8"

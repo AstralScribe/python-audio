@@ -1,8 +1,11 @@
+#include <pybind11/pybind11.h>
+#include <python3.12/Python.h>
+
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
 
-#include "python3.12/Python.h"
+namespace py = pybind11;
 
 #define PY_SSIZE_T_CLEAN
 #define BIAS 0x84 /* define the add-in bias for 16 bit samples */
@@ -154,3 +157,125 @@ constexpr int stepsizeTable[89] = {
     2272,  2499,  2749,  3024,  3327,  3660,  4026,  4428,  4871,  5358,
     5894,  6484,  7132,  7845,  8630,  9493,  10442, 11487, 12635, 13899,
     15289, 16818, 18500, 20350, 22385, 24623, 27086, 29794, 32767};
+
+// #define GETINTX(T, cp, i) (*(T *)((unsigned char *)(cp) + (i)))
+#define GETINTX(T, cp, i) reinterpret_cast<T *>((unsigned char *)(cp) + (i)))
+// #define SETINTX(T, cp, i, val)                      \
+//   do {                                              \
+//     *(T *)((unsigned char *)(cp) + (i)) = (T)(val); \
+//   } while (0)
+#define SETINTX(T, cp, i, val)                                     \
+  do {                                                             \
+    reinterpret_cast<T *>((unsigned char *)(cp) + (i)) = (T)(val); \
+  } while (0)
+
+#define GETINT8(cp, i) GETINTX(signed char, (cp), (i))
+#define GETINT16(cp, i) GETINTX(int16_t, (cp), (i))
+#define GETINT32(cp, i) GETINTX(int32_t, (cp), (i))
+
+#ifdef WORDS_BIGENDIAN
+#define GETINT24(cp, i)                      \
+  (((unsigned char *)(cp) + (i))[2] +        \
+   (((unsigned char *)(cp) + (i))[1] << 8) + \
+   (((signed char *)(cp) + (i))[0] << 16))
+#else
+#define GETINT24(cp, i)                      \
+  (((unsigned char *)(cp) + (i))[0] +        \
+   (((unsigned char *)(cp) + (i))[1] << 8) + \
+   (((signed char *)(cp) + (i))[2] << 16))
+#endif
+
+#define SETINT8(cp, i, val) SETINTX(signed char, (cp), (i), (val))
+#define SETINT16(cp, i, val) SETINTX(int16_t, (cp), (i), (val))
+#define SETINT32(cp, i, val) SETINTX(int32_t, (cp), (i), (val))
+
+#ifdef WORDS_BIGENDIAN
+#define SETINT24(cp, i, val)                                       \
+  do {                                                             \
+    ((unsigned char *)(cp) + (i))[2] = static_cast<int>(val);      \
+    ((unsigned char *)(cp) + (i))[1] = static_cast<int>(val) >> 8; \
+    ((signed char *)(cp) + (i))[0] = static_cast<int>(val) >> 16;  \
+  } while (0)
+#else
+#define SETINT24(cp, i, val)                                       \
+  do {                                                             \
+    ((unsigned char *)(cp) + (i))[0] = static_cast<int>(val);      \
+    ((unsigned char *)(cp) + (i))[1] = static_cast<int>(val) >> 8; \
+    ((signed char *)(cp) + (i))[2] = static_cast<int>(val) >> 16;  \
+  } while (0)
+#endif
+
+#define GETRAWSAMPLE(size, cp, i)                       \
+  ((size == 1)   ? static_cast<int> GETINT8((cp), (i))  \
+   : (size == 2) ? static_cast<int> GETINT16((cp), (i)) \
+   : (size == 3) ? static_cast<int> GETINT24((cp), (i)) \
+                 : static_cast<int>                     \
+                       GETINT32((cp), (i)))
+
+#define SETRAWSAMPLE(size, cp, i, val) \
+  do {                                 \
+    if (size == 1)                     \
+      SETINT8((cp), (i), (val));       \
+    else if (size == 2)                \
+      SETINT16((cp), (i), (val));      \
+    else if (size == 3)                \
+      SETINT24((cp), (i), (val));      \
+    else                               \
+      SETINT32((cp), (i), (val));      \
+  } while (0)
+
+#define GETSAMPLE32(size, cp, i)                              \
+  ((size == 1)   ? static_cast<int> GETINT8((cp), (i)) << 24  \
+   : (size == 2) ? static_cast<int> GETINT16((cp), (i)) << 16 \
+   : (size == 3) ? static_cast<int> GETINT24((cp), (i)) << 8  \
+                 : static_cast<int>                           \
+                       GETINT32((cp), (i)))
+
+#define SETSAMPLE32(size, cp, i, val)   \
+  do {                                  \
+    if (size == 1)                      \
+      SETINT8((cp), (i), (val) >> 24);  \
+    else if (size == 2)                 \
+      SETINT16((cp), (i), (val) >> 16); \
+    else if (size == 3)                 \
+      SETINT24((cp), (i), (val) >> 8);  \
+    else                                \
+      SETINT32((cp), (i), (val));       \
+  } while (0)
+
+static int audioop_check_size(int size) {
+  if (size < 1 || size > 4) {
+    // throw error here;
+    return 0;
+  } else {
+    return 1;
+  }
+}
+
+static int audioop_check_parameters(int len, int size) {
+  if (!audioop_check_size(size)) return 0;
+  if (len % size != 0) {
+    // throw error here;
+    return 0;
+  }
+  return 1;
+}
+
+// static void *audioop_getsample_impl(Py_buffer *fragment, int width, int
+// index) {
+//   int val;
+//   if (!audioop_check_parameters(fragment->len, width)) return 0;
+//   if (index < 0 || index >= fragment->len)
+// }
+//
+//   int val;
+//
+//   if (!audioop_check_parameters(fragment->len, width)) return NULL;
+//   if (index < 0 || index >= fragment->len / width) {
+//     PyErr_SetString(get_audioop_state(module)->AudioopError,
+//                     "Index out of range");
+//     return NULL;
+//   }
+//   val = GETRAWSAMPLE(width, fragment->buf, index * width);
+//   return PyLong_FromLong(val);
+// }
