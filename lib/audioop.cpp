@@ -157,7 +157,7 @@ constexpr int stepsizeTable[89] = {
     5894,  6484,  7132,  7845,  8630,  9493,  10442, 11487, 12635, 13899,
     15289, 16818, 18500, 20350, 22385, 24623, 27086, 29794, 32767};
 
-#define GETINTX(T, cp, i) reinterpret_cast<T *>((unsigned char *)(cp) + (i)))
+#define GETINTX(T, cp, i) (*reinterpret_cast<T *>((unsigned char *)(cp) + (i)))
 #define SETINTX(T, cp, i, val)                                     \
   do {                                                             \
     reinterpret_cast<T *>((unsigned char *)(cp) + (i)) = (T)(val); \
@@ -257,30 +257,115 @@ static int audioop_check_parameters(int len, int size) {
 
 static int audioop_getsample_impl(py::buffer *fragment, int width, int index) {
   int val;
-  if (!audioop_check_parameters(fragment->request().size, width)) return 0;
-  if (index < 0 || index >> fragment->request().size) {
+  py::buffer_info buf = fragment->request();
+  if (!audioop_check_parameters(buf.size, width)) return 0;
+  if (index < 0 || index >= buf.size) {
     throw py::index_error("Index out of range");
     return 0;
   }
-  val = GETRAWSAMPLE(width, fragment->request().ptr, index * width);
+  val = GETRAWSAMPLE(width, buf.ptr, index * width);
   return val;
 }
 
-// static void *audioop_getsample_impl(Py_buffer *fragment, int width, int
-// index) {
-//   int val;
-//   if (!audioop_check_parameters(fragment->len, width)) return 0;
-//   if (index < 0 || index >= fragment->len)
-// }
-//
-//   int val;
-//
-//   if (!audioop_check_parameters(fragment->len, width)) return NULL;
-//   if (index < 0 || index >= fragment->len / width) {
-//     PyErr_SetString(get_audioop_state(module)->AudioopError,
-//                     "Index out of range");
-//     return NULL;
-//   }
-//   val = GETRAWSAMPLE(width, fragment->buf, index * width);
-//   return PyLong_FromLong(val);
-// }
+static py::ssize_t audioop_max_impl(py::buffer *fragment, int width) {
+  py::ssize_t i;
+  unsigned int absval, max = 0;
+  py::buffer_info buf = fragment->request();
+
+  if (!audioop_check_parameters(buf.size, width)) {
+    return 0;
+  }
+  for (i = 0; i < buf.size; i += width) {
+    int val = GETRAWSAMPLE(width, buf.ptr, i);
+    absval = (val < 0) ? (unsigned int)-(int64_t)val : val;
+    max = (absval > max) ? absval : max;
+  }
+  return max;
+}
+
+static py::tuple audioop_minmax_impl(py::buffer *fragment, int width) {
+  int min = 0x7fffffff, max = -0x7FFFFFFF - 1;
+  py::size_t i;
+  py::tuple result(2);
+  py::buffer_info buf = fragment->request();
+
+  if (!audioop_check_parameters(buf.size, width))
+    return py::make_tuple(NULL, NULL);
+
+  for (i = 0; i < buf.size; i += width) {
+    int val = GETRAWSAMPLE(width, buf.ptr, i);
+    if (val > max) max = val;
+    if (val < min) min = val;
+  }
+
+  result[0] = min;
+  result[1] = max;
+
+  return result;
+}
+
+static int audioop_avg_impl(py::buffer *fragment, int width) {
+  int avg;
+  double sum = 0.0;
+
+  py::size_t i;
+  py::buffer_info buf = fragment->request();
+
+  if (!audioop_check_parameters(buf.size, width)) return 0;
+
+  for (i = 0; i < buf.size; i += width) {
+    sum += GETRAWSAMPLE(width, buf.ptr, i);
+  }
+
+  if (buf.size == 0) {
+    avg = 0;
+  } else {
+    double num_frames = static_cast<double>(buf.size) / width;
+    avg = static_cast<int>(floor(sum / num_frames));
+  }
+
+  return avg;
+}
+
+static unsigned int audioop_rms_impl(py::buffer *fragment, int width) {
+  unsigned int rms_val;
+  double sum_sqre = 0.0;
+
+  py::ssize_t i;
+  py::buffer_info buf = fragment->request();
+
+  if (!audioop_check_parameters(buf.size, width)) return 0;
+
+  for (i = 0; i < buf.size; i += width) {
+    double val = GETRAWSAMPLE(width, buf.ptr, i);
+    sum_sqre += val * val;
+  }
+
+  if (buf.size == 0) {
+    rms_val = 0;
+  } else {
+    double num_frames = static_cast<double>(buf.size) / width;
+    rms_val = static_cast<unsigned int>(sum_sqre / num_frames);
+  }
+
+  return rms_val;
+}
+
+static double _sum2(const int16_t *a, const int16_t *b, py::size_t len) {
+  py::size_t i;
+  double sum = 0.0;
+
+  for (i = 0; i < len; i++) {
+    sum += static_cast<double>(a[i]) * static_cast<double>(b[i]);
+  }
+  return sum;
+}
+
+static py::tuple audioop_findfit_impl(py::buffer *fragment,
+                                      py::buffer *reference) {
+  py::buffer_info frag = fragment->request();
+  py::buffer_info ref = reference->request();
+
+  py::size_t i, j;
+  py::size_t frag_len = frag.size, ref_len = ref.size;
+}
