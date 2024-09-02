@@ -7,9 +7,11 @@
 #include <cstdint>
 #include <iostream>
 #include <new>
-#include <string>
 
 namespace py = pybind11;
+
+#define STRINGIFY(x) #x
+#define MACRO_STRINGIFY(x) STRINGIFY(x)
 
 #define PY_SSIZE_T_CLEAN
 #define BIAS 0x84 /* define the add-in bias for 16 bit samples */
@@ -1016,9 +1018,28 @@ PYBIND11_MODULE(_audioop, m) {
   m.def("_add", &audioop_add_impl, "");
   // m.def("_adpcm2lin", &audioop_adpcm2lin_impl, "");
   m.def("_alaw2lin", &audioop_alaw2lin_impl, "");
-  m.def("_get_sample", &audioop_getsample_impl, "");
+  m.def("_avg", &audioop_avg_impl, "");
+  m.def("_avgpp", &audioop_avgpp_impl, "");
+  m.def("_bias", &audioop_bias_impl, "");
+  m.def("_byteswap", &audioop_byteswap_impl, "");
+  m.def("_cross", &audioop_cross_impl, "");
+  m.def("_findfactor", &audioop_findfactor_impl, "");
+  m.def("_findfit", &audioop_findfit_impl, "");
   m.def("_findmax", &audioop_findmax_impl, "");
+  m.def("_get_sample", &audioop_getsample_impl, "");
+  // m.def("_lin2adpcm", &audioop_lin2adpcm_impl, "");
+  m.def("_lin2alaw", &audioop_lin2alaw_impl, "");
+  m.def("_lin2lin", &audioop_lin2lin_impl, "");
+  m.def("_lin2ulaw", &audioop_lin2ulaw_impl, "");
+  m.def("_max", &audioop_max_impl, "");
+  m.def("_maxpp", &audioop_maxpp_impl, "");
+  m.def("_minmax", &audioop_minmax_impl, "");
   m.def("_mul", &audioop_mul_impl, "");
+  // m.def("_ratecv", &audioop_ratecv_impl, "");
+  m.def("_reverse", &audioop_reverse_impl, "");
+  m.def("_rms", &audioop_rms_impl, "");
+  m.def("_tomono", &audioop_tomono_impl, "");
+  m.def("_tostereo", &audioop_tostereo_impl, "");
   m.def("_ulaw2lin", &audioop_ulaw2lin_impl, "");
 
 #ifdef VERSION_INFO
