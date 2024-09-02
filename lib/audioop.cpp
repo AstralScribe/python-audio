@@ -1,8 +1,13 @@
+#include <Python.h>
 #include <pybind11/pybind11.h>
+#include <pybind11/pytypes.h>
 
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
+#include <iostream>
+#include <new>
+#include <string>
 
 namespace py = pybind11;
 
@@ -158,9 +163,9 @@ constexpr int stepsizeTable[89] = {
     15289, 16818, 18500, 20350, 22385, 24623, 27086, 29794, 32767};
 
 #define GETINTX(T, cp, i) (*reinterpret_cast<T *>((unsigned char *)(cp) + (i)))
-#define SETINTX(T, cp, i, val)                                     \
-  do {                                                             \
-    reinterpret_cast<T *>((unsigned char *)(cp) + (i)) = (T)(val); \
+#define SETINTX(T, cp, i, val)                                                 \
+  do {                                                                         \
+    *reinterpret_cast<T *>((unsigned char *)(cp) + (i)) = static_cast<T>(val); \
   } while (0)
 
 #define GETINT8(cp, i) GETINTX(signed char, (cp), (i))
@@ -237,28 +242,21 @@ constexpr int stepsizeTable[89] = {
       SETINT32((cp), (i), (val));       \
   } while (0)
 
-static int audioop_check_size(int size) {
-  if (size < 1 || size > 4) {
+static void audioop_check_size(int size) {
+  if (size < 1 || size > 4)
     throw py::value_error("Size should be 1, 2, 3 or 4");
-    return 0;
-  } else {
-    return 1;
-  }
 }
 
-static int audioop_check_parameters(int len, int size) {
-  if (!audioop_check_size(size)) return 0;
-  if (len % size != 0) {
-    throw py::value_error("Not a whole number of frames");
-    return 0;
-  }
-  return 1;
+static void audioop_check_parameters(int len, int size) {
+  audioop_check_size(size);
+  if (len % size != 0) throw py::value_error("Not a whole number of frames");
 }
 
 static int audioop_getsample_impl(py::buffer *fragment, int width, int index) {
   int val;
   py::buffer_info buf = fragment->request();
-  if (!audioop_check_parameters(buf.size, width)) return 0;
+  audioop_check_parameters(buf.size, width);
+
   if (index < 0 || index >= buf.size) {
     throw py::index_error("Index out of range");
     return 0;
@@ -272,9 +270,8 @@ static py::ssize_t audioop_max_impl(py::buffer *fragment, int width) {
   unsigned int absval, max = 0;
   py::buffer_info buf = fragment->request();
 
-  if (!audioop_check_parameters(buf.size, width)) {
-    return 0;
-  }
+  audioop_check_parameters(buf.size, width);
+
   for (i = 0; i < buf.size; i += width) {
     int val = GETRAWSAMPLE(width, buf.ptr, i);
     absval = (val < 0) ? (unsigned int)-(int64_t)val : val;
@@ -289,8 +286,7 @@ static py::tuple audioop_minmax_impl(py::buffer *fragment, int width) {
   py::tuple result(2);
   py::buffer_info buf = fragment->request();
 
-  if (!audioop_check_parameters(buf.size, width))
-    return py::make_tuple(NULL, NULL);
+  audioop_check_parameters(buf.size, width);
 
   for (i = 0; i < buf.size; i += width) {
     int val = GETRAWSAMPLE(width, buf.ptr, i);
@@ -311,7 +307,7 @@ static int audioop_avg_impl(py::buffer *fragment, int width) {
   py::size_t i;
   py::buffer_info buf = fragment->request();
 
-  if (!audioop_check_parameters(buf.size, width)) return 0;
+  audioop_check_parameters(buf.size, width);
 
   for (i = 0; i < buf.size; i += width) {
     sum += GETRAWSAMPLE(width, buf.ptr, i);
@@ -334,7 +330,7 @@ static unsigned int audioop_rms_impl(py::buffer *fragment, int width) {
   py::ssize_t i;
   py::buffer_info buf = fragment->request();
 
-  if (!audioop_check_parameters(buf.size, width)) return 0;
+  audioop_check_parameters(buf.size, width);
 
   for (i = 0; i < buf.size; i += width) {
     double val = GETRAWSAMPLE(width, buf.ptr, i);
@@ -363,9 +359,456 @@ static double _sum2(const int16_t *a, const int16_t *b, py::size_t len) {
 
 static py::tuple audioop_findfit_impl(py::buffer *fragment,
                                       py::buffer *reference) {
+  py::tuple output(2);
   py::buffer_info frag = fragment->request();
   py::buffer_info ref = reference->request();
 
-  py::size_t i, j;
-  py::size_t frag_len = frag.size, ref_len = ref.size;
+  if (frag.size & 1 || ref.size & 1)
+    throw py::value_error("Strings should be even-sized.");
+
+  py::size_t len1, len2;
+
+  const int16_t *cp1 = static_cast<const int16_t *>(frag.ptr);
+  const int16_t *cp2 = static_cast<const int16_t *>(ref.ptr);
+  len1 = frag.size >> 1;
+  len2 = ref.size >> 1;
+
+  if (len1 < len2) throw py::index_error("First sample should be longer.");
+
+  double aj_m1, aj_lm1;
+  double sum_ri_2, sum_aij_2, sum_aij_ri, result, best_result, factor;
+  py::size_t j, best_j;
+
+  sum_ri_2 = _sum2(cp2, cp2, len2);
+  sum_aij_2 = _sum2(cp1, cp1, len2);
+  sum_aij_ri = _sum2(cp1, cp2, len2);
+
+  result = (sum_ri_2 * sum_aij_2 - sum_aij_ri * sum_aij_ri) / sum_aij_2;
+  best_result = result;
+  best_j = 0;
+
+  for (j = 1; j <= len1 - len2; j++) {
+    aj_m1 = static_cast<double>(cp1[j - 1]);
+    aj_lm1 = static_cast<double>(cp1[j + len2 - 1]);
+
+    sum_aij_2 = sum_aij_2 + aj_lm1 * aj_lm1 - aj_m1 * aj_m1;
+    sum_aij_ri = _sum2(cp1 + j, cp2, len2);
+
+    result = (sum_ri_2 * sum_aij_2 - sum_aij_ri * sum_aij_ri) / sum_aij_2;
+
+    if (result < best_result) {
+      best_result = result;
+      best_j = j;
+    }
+  }
+
+  factor = _sum2(cp1 + best_j, cp2, len2) / sum_ri_2;
+
+  output[0] = best_j;
+  output[1] = factor;
+  return output;
+}
+
+static double audioop_findfactor_impl(py::buffer *fragment,
+                                      py::buffer *reference) {
+  py::buffer_info frag = fragment->request();
+  py::buffer_info ref = reference->request();
+
+  double sum_ri_2, sum_aij_ri, result;
+
+  if (frag.size & 1 || ref.size & 1)
+    throw py::value_error("Strings should be even-sized.");
+  if (frag.size != ref.size)
+    throw py::value_error("Samples should be of same size");
+
+  const int16_t *cp1 = static_cast<const int16_t *>(frag.ptr);
+  const int16_t *cp2 = static_cast<const int16_t *>(ref.ptr);
+  py::size_t len = frag.size >> 1;
+
+  sum_ri_2 = _sum2(cp2, cp2, len);
+  sum_aij_ri = _sum2(cp1, cp2, len);
+  result = sum_aij_ri / sum_ri_2;
+
+  return result;
+}
+
+static py::size_t audioop_findmax_impl(py::buffer *fragment,
+                                       py::size_t length) {
+  py::buffer_info frag = fragment->request();
+  if (frag.size & 1) throw py::value_error("Strings should be even-sized");
+
+  const int16_t *cp1 = static_cast<const int16_t *>(frag.ptr);
+  py::size_t len1 = frag.size >> 1;
+
+  if (length < 0 || len1 < length)
+    throw py::index_error("Input sample should be longer");
+
+  py::size_t j, best_j;
+  double aj_m1, aj_lm1;
+  double result, best_result;
+
+  result = _sum2(cp1, cp1, length);
+  best_j = 0;
+
+  for (j = 1; j <= len1 - length; j++) {
+    aj_m1 = static_cast<double>(cp1[j - 1]);
+    aj_lm1 = static_cast<double>(cp1[j + length - 1]);
+
+    result += aj_lm1 * aj_lm1 - aj_m1 * aj_m1;
+    if (result > best_result) {
+      best_result = result;
+      best_j = j;
+    }
+  }
+  return best_j;
+}
+
+static unsigned int audioop_avgpp_impl(py::buffer *fragment, int width) {
+  py::buffer_info frag = fragment->request();
+  py::size_t i;
+  int prev_val, prev_extreme_valid = 0, prev_extreme = 0;
+  double sum = 0.0;
+  unsigned int avg;
+  int diff, prev_diff, next_extreme = 0;
+
+  audioop_check_parameters(frag.size, width);
+  if (frag.size <= width) return 0;
+
+  prev_val = GETRAWSAMPLE(width, frag.ptr, 0);
+  prev_diff = 42;
+
+  for (i = 0; i < frag.size; i += width) {
+    int val = GETRAWSAMPLE(width, frag.ptr, i);
+    if (val != prev_val) {
+      diff = val < prev_val;
+      if (prev_diff != diff) {
+        if (prev_extreme_valid) {
+          if (prev_val < prev_extreme)
+            sum += static_cast<double>(static_cast<unsigned int>(prev_extreme) -
+                                       static_cast<unsigned int>(prev_val));
+          else
+            sum += static_cast<double>(static_cast<unsigned int>(prev_val) -
+                                       static_cast<unsigned int>(prev_extreme));
+          next_extreme++;
+        }
+        prev_extreme_valid = 1;
+        prev_extreme = prev_val;
+      }
+      prev_val = val;
+      prev_diff = diff;
+    }
+  }
+  if (next_extreme == 0)
+    avg = 0;
+  else
+    avg = static_cast<unsigned int>(sum / static_cast<double>(next_extreme));
+
+  return avg;
+}
+
+static unsigned int audioop_maxpp_impl(py::buffer *fragment, int width) {
+  py::buffer_info frag = fragment->request();
+  audioop_check_parameters(frag.size, width);
+  if (frag.size <= width) return 0;
+
+  py::size_t i;
+  int prev_val, prev_extreme_valid = 0, prev_extreme = 0;
+  unsigned int max = 0, extreme_diff;
+  int diff, prev_diff;
+
+  prev_val = GETRAWSAMPLE(width, frag.ptr, 0);
+  prev_diff = 42;
+
+  for (i = 0; i < frag.size; i += width) {
+    int val = GETRAWSAMPLE(width, frag.ptr, i);
+    if (val != prev_val) {
+      diff = val < prev_val;
+      if (prev_diff != diff) {
+        if (prev_extreme_valid) {
+          if (prev_val < prev_extreme)
+            extreme_diff = static_cast<unsigned int>(prev_extreme) -
+                           static_cast<unsigned int>(prev_val);
+          else
+            extreme_diff = static_cast<unsigned int>(prev_val) -
+                           static_cast<unsigned int>(prev_extreme);
+          if (extreme_diff > max) max = extreme_diff;
+        }
+        prev_extreme_valid = 1;
+        prev_extreme = prev_val;
+      }
+      prev_val = val;
+      prev_diff = diff;
+    }
+  }
+  return max;
+}
+
+static py::size_t audioop_cross_impl(py::buffer *fragment, int width) {
+  py::buffer_info frag = fragment->request();
+  audioop_check_parameters(frag.size, width);
+
+  py::size_t i, ncross = -1;
+  int prev_val = 42;
+
+  for (i = 0; i < frag.size; i += width) {
+    int val = GETRAWSAMPLE(width, frag.ptr, i) < 0;
+    if (val != prev_val) ncross++;
+    prev_val = val;
+  }
+  return ncross;
+}
+
+// Function generating wrong values
+static py::bytes audioop_mul_impl(py::buffer *fragment, int width,
+                                  double factor) {
+  py::buffer_info frag = fragment->request();
+  py::size_t i;
+  py::bytes rv;
+  signed char *ncp;
+  double maxval, minval;
+
+  audioop_check_parameters(frag.size, width);
+
+  maxval = static_cast<double>(maxvals[width]);
+  minval = static_cast<double>(minvals[width]);
+
+  try {
+    ncp = new signed char[frag.size];
+  } catch (const std::bad_alloc &e) {
+    std::cerr << "Memory allocation failed: " << e.what() << std::endl;
+    throw py::buffer_error("Memory allocation failed");
+  }
+
+  for (i = 0; i < frag.size; i += width) {
+    double val = GETRAWSAMPLE(width, frag.ptr, i);
+    int ival = fbound(val * factor, minval, maxval);
+    SETRAWSAMPLE(width, ncp, i, ival);
+  }
+
+  rv = py::bytes(reinterpret_cast<const char *>(ncp), frag.size);
+  delete[] ncp;
+
+  return rv;
+}
+
+static py::bytes audioop_tomono_impl(py::buffer *fragment, int width,
+                                     double lfactor, double rfactor) {
+  py::buffer_info frag = fragment->request();
+  signed char *cp, *ncp;
+  py::size_t len, i;
+  double maxval, minval;
+  py::bytes rv;
+
+  len = frag.size;
+  audioop_check_parameters(len, width);
+  if (((len / width) & 1) != 0)
+    throw py::value_error("Not a whole number of frames");
+
+  maxval = static_cast<double>(maxvals[width]);
+  minval = static_cast<double>(minvals[width]);
+
+  try {
+    ncp = new signed char[len / 2];
+  } catch (const std::bad_alloc &e) {
+    std::cerr << "Memory allocation failed: " << e.what() << std::endl;
+    throw py::buffer_error("Memory allocation failed");
+  }
+
+  for (i = 0; i < len; i += width * 2) {
+    double val1 = GETRAWSAMPLE(width, cp, i);
+    double val2 = GETRAWSAMPLE(width, cp, i + width);
+    double val = val * lfactor + val * rfactor;
+    int ival = fbound(val, minval, maxval);
+    SETRAWSAMPLE(width, ncp, i / 2, ival);
+  }
+
+  rv = py::bytes(reinterpret_cast<const char *>(ncp), len / 2);
+  delete[] ncp;
+  return rv;
+}
+
+static py::bytes audioop_tostereo_impl(py::buffer *fragment, int width,
+                                       double lfactor, double rfactor) {
+  py::buffer_info frag = fragment->request();
+  py::bytes rv;
+  py::size_t i;
+  signed char *ncp;
+  double maxval, minval;
+
+  audioop_check_parameters(frag.size, width);
+
+  maxval = static_cast<double>(maxvals[width]);
+  minval = static_cast<double>(minvals[width]);
+
+  if (frag.size > PY_SSIZE_T_MAX / 2)
+    throw py::buffer_error("Not enough memory for output buffer");
+
+  try {
+    ncp = new signed char[frag.size * 2];
+  } catch (const std::bad_alloc &e) {
+    std::cerr << "Memory allocation failed: " << e.what() << std::endl;
+    throw py::buffer_error("Memory allocation failed");
+  }
+
+  for (i = 0; i < frag.size; i += width) {
+    double val = GETRAWSAMPLE(width, frag.ptr, i);
+    int val1 = fbound(val * lfactor, minval, maxval);
+    int val2 = fbound(val * rfactor, minval, maxval);
+    SETRAWSAMPLE(width, ncp, i * 2, val1);          // Possible error source
+    SETRAWSAMPLE(width, ncp, i * 2 + width, val2);  // Possible error source
+  }
+
+  rv = py::bytes(reinterpret_cast<const char *>(ncp), frag.size * 2);
+  delete[] ncp;
+  return rv;
+}
+
+static py::bytes audioop_add_impl(py::buffer *fragment1, py::buffer *fragment2,
+                                  int width) {
+  py::buffer_info frag1 = fragment1->request();
+  py::buffer_info frag2 = fragment2->request();
+  py::bytes rv;
+  py::size_t i;
+  signed char *ncp;
+  double maxval, minval, newval;
+
+  py::size_t len1, len2;
+
+  len1 = frag1.size;
+  len2 = frag2.size;
+
+  audioop_check_parameters(len1, width);
+  audioop_check_parameters(len2, width);
+
+  if (len1 != len2)
+    throw py::index_error("Lenth of both fragment should be same");
+
+  minval = static_cast<double>(minvals[width]);
+  maxval = static_cast<double>(maxvals[width]);
+
+  try {
+    ncp = new signed char[len1];
+  } catch (const std::bad_alloc &e) {
+    std::cerr << "Memory allocation failed: " << e.what() << std::endl;
+    throw py::buffer_error("Memory allocation failed");
+  }
+
+  for (i = 0; i < len1; i += width) {
+    int val1 = GETRAWSAMPLE(width, frag1.ptr, i);
+    int val2 = GETRAWSAMPLE(width, frag2.ptr, i);
+
+    if (width < 4) {
+      newval = val1 + val2;
+      newval = std::clamp(newval, minval, maxval);
+    } else {
+      double fval = static_cast<double>(val1) + static_cast<double>(val2);
+      newval = fbound(fval, minval, maxval);
+    }
+    SETRAWSAMPLE(width, ncp, i, newval);
+  }
+
+  rv = py::bytes(reinterpret_cast<const char *>(ncp), len1);
+  delete[] ncp;
+  return rv;
+}
+
+static py::bytes audioop_bias_impl(py::buffer *fragment, int width, int bias) {
+  py::buffer_info frag = fragment->request();
+  py::bytes rv;
+  py::size_t i;
+  signed char *ncp;
+  unsigned int val = 0, mask;
+
+  audioop_check_parameters(frag.size, width);
+
+  try {
+    ncp = new signed char[frag.size];
+  } catch (const std::bad_alloc &e) {
+    std::cerr << "Memory allocation failed: " << e.what() << std::endl;
+    throw py::buffer_error("Memory allocation failed");
+  }
+
+  mask = masks[width];
+
+  for (i = 0; i < frag.size; i += width) {
+    if (width == 1) {
+      val = GETINTX(unsigned char, frag.ptr, i);
+    } else if (width == 2) {
+      val = GETINTX(uint16_t, frag.ptr, i);
+    } else if (width == 3) {
+      val = static_cast<unsigned int>(GETINT24(frag.ptr, i)) & 0xffffffu;
+    } else {
+      assert(width == 4);
+      val = GETINTX(uint32_t, frag.ptr, i);
+    }
+
+    val += static_cast<unsigned int>(bias);
+    val &= mask;
+
+    if (width == 1) {
+      SETINTX(unsigned char, ncp, i, val);
+    } else if (width == 2) {
+      SETINTX(uint16_t, ncp, i, val);
+    } else if (width == 3) {
+      SETINT24(ncp, i, static_cast<int>(val));
+    } else {
+      assert(width == 4);
+      SETINTX(uint32_t, ncp, i, val);
+    }
+  }
+
+  rv = py::bytes(reinterpret_cast<const char *>(ncp), frag.size);
+  delete[] ncp;
+  return rv;
+}
+
+static py::bytes audioop_reverse_impl(py::buffer *fragment, int width) {
+  py::buffer_info frag = fragment->request();
+  py::bytes rv;
+  py::size_t i;
+  unsigned char *ncp;
+
+  audioop_check_parameters(frag.size, width);
+
+  try {
+    ncp = new unsigned char[frag.size];
+  } catch (const std::bad_alloc &e) {
+    std::cerr << "Memory allocation failed: " << e.what() << std::endl;
+    throw py::buffer_error("Memory allocation failed");
+  }
+
+  for (i = 0; i < frag.size; i += width) {
+    int val = GETRAWSAMPLE(width, frag.ptr, i);
+    SETRAWSAMPLE(width, ncp, frag.size - i - width, val);
+  }
+
+  rv = py::bytes(reinterpret_cast<const char *>(ncp), frag.size);
+  delete[] ncp;
+  return rv;
+}
+
+static py::bytes audioop_byteswap_impl(py::buffer *fragment, int width) {
+  py::buffer_info frag = fragment->request();
+  py::bytes rv;
+  py::size_t i;
+  unsigned char *ncp;
+
+  audioop_check_parameters(frag.size, width);
+
+  try {
+    ncp = new unsigned char[frag.size];
+  } catch (const std::bad_alloc &e) {
+    std::cerr << "Memory allocation failed: " << e.what() << std::endl;
+    throw py::buffer_error("Memory allocation failed");
+  }
+
+  for (i = 0; i < frag.size; i += width) {
+    int j;
+    for (j = 0; j < width; j++)
+      ncp[i + width - 1 - j] = (static_cast<unsigned char *>(frag.ptr))[i + j];
+  }
+
+  rv = py::bytes(reinterpret_cast<const char *>(ncp), frag.size);
+  delete[] ncp;
+  return rv;
 }
