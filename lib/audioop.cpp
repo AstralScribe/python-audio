@@ -812,3 +812,218 @@ static py::bytes audioop_byteswap_impl(py::buffer *fragment, int width) {
   delete[] ncp;
   return rv;
 }
+
+static py::bytes audioop_lin2lin_impl(py::buffer *fragment, int width,
+                                      int newwidth) {
+  py::buffer_info frag = fragment->request();
+  py::bytes rv;
+  unsigned char *ncp;
+  py::size_t i, j;
+
+  audioop_check_parameters(frag.size, width);
+  audioop_check_size(newwidth);
+
+  if (frag.size / width > PY_SSIZE_T_MAX / newwidth)
+    throw py::buffer_error("Not enough memory for output buffer");
+
+  try {
+    ncp = new unsigned char[(frag.size / width) * newwidth];
+  } catch (const std::bad_alloc &e) {
+    std::cerr << "Memory allocation failed: " << e.what() << std::endl;
+    throw py::buffer_error("Memory allocation failed");
+  }
+
+  for (i = j = 0; i < frag.size; i += width, j += newwidth) {
+    int val = GETSAMPLE32(width, frag.ptr, i);
+    SETSAMPLE32(newwidth, ncp, j, val);
+  }
+
+  rv = py::bytes(reinterpret_cast<const char *>(ncp),
+                 (frag.size / width) * newwidth);
+  delete[] ncp;
+  return rv;
+}
+
+static int _gcd(int a, int b) {
+  while (b > 0) {
+    int tmp = a % b;
+    a = b;
+    b = tmp;
+  }
+  return a;
+}
+
+// Not implemented yet
+static py::bytes audioop_ratecv_impl(py::buffer *fragment, int width,
+                                     int nchannels, int inrate, int outrate,
+                                     py::object *state, int weightA,
+                                     int weightB) {
+  py::buffer_info frag = fragment->request();
+  py::bytes samps, str, rv, channel;
+  py::size_t len;
+  char *ncp, *cp;
+  int chan, d, *prev_i, *cur_i, cur_o, bytes_per_frame;
+
+  audioop_check_size(width);
+  if (nchannels < 1) throw py::value_error("# of channels should be >= 1");
+  if (width > INT_MAX / nchannels)
+    throw py::buffer_error("width * nchannels too big for a C int");
+
+  bytes_per_frame = width * nchannels;
+  try {
+    ncp = new char[frag.size];
+  } catch (const std::bad_alloc &e) {
+    std::cerr << "Memory allocation failed: " << e.what() << std::endl;
+    throw py::buffer_error("Memory allocation failed");
+  }
+
+  rv = py::bytes(reinterpret_cast<const char *>(ncp), frag.size);
+  delete[] ncp;
+  return rv;
+}
+
+static py::bytes audioop_lin2ulaw_impl(py::buffer *fragment, int width) {
+  py::buffer_info frag = fragment->request();
+  py::bytes rv;
+  unsigned char *ncp;
+  py::size_t i;
+
+  audioop_check_parameters(frag.size, width);
+
+  try {
+    ncp = new unsigned char[frag.size / width];
+  } catch (const std::bad_alloc &e) {
+    std::cerr << "Memory allocation failed: " << e.what() << std::endl;
+    throw py::buffer_error("Memory allocation failed");
+  }
+
+  for (i = 0; i < frag.size; i += width) {
+    int val = GETSAMPLE32(width, frag.ptr, i);
+    *ncp++ = st_14linear2ulaw(val >> 18);
+  }
+
+  rv = py::bytes(reinterpret_cast<const char *>(ncp), frag.size / width);
+  delete[] ncp;
+  return rv;
+}
+
+static py::bytes audioop_ulaw2lin_impl(py::buffer *fragment, int width) {
+  py::buffer_info frag = fragment->request();
+  py::bytes rv;
+  py::size_t i;
+  signed char *ncp;
+  int j = 0;
+
+  audioop_check_size(width);
+  if (frag.size > PY_SSIZE_T_MAX / width)
+    throw py::buffer_error("not enough memory for output buffer");
+
+  try {
+    ncp = new signed char[frag.size * width];
+  } catch (const std::bad_alloc &e) {
+    std::cerr << "Memory allocation failed: " << e.what() << std::endl;
+    throw py::buffer_error("Memory allocation failed");
+  }
+
+  // cp = frag.ptr;
+  for (i = 0; i < frag.size * width; i += width) {
+    int temp = GETINT8(frag.ptr, j++);
+    int val = st_ulaw2linear16(temp) << 16;
+    SETSAMPLE32(width, ncp, i, val);
+  }
+
+  rv = py::bytes(reinterpret_cast<const char *>(ncp), frag.size * width);
+  delete[] ncp;
+  return rv;
+}
+
+static py::bytes audioop_lin2alaw_impl(py::buffer *fragment, int width) {
+  py::buffer_info frag = fragment->request();
+  py::bytes rv;
+  unsigned char *ncp;
+  py::size_t i;
+
+  audioop_check_parameters(frag.size, width);
+
+  try {
+    ncp = new unsigned char[frag.size / width];
+  } catch (const std::bad_alloc &e) {
+    std::cerr << "Memory allocation failed: " << e.what() << std::endl;
+    throw py::buffer_error("Memory allocation failed");
+  }
+
+  for (i = 0; i < frag.size; i += width) {
+    int val = GETSAMPLE32(width, frag.ptr, i);
+    *ncp++ = st_linear2alaw(val >> 19);
+  }
+
+  rv = py::bytes(reinterpret_cast<const char *>(ncp), frag.size / width);
+  delete[] ncp;
+  return rv;
+}
+
+static py::bytes audioop_alaw2lin_impl(py::buffer *fragment, int width) {
+  py::buffer_info frag = fragment->request();
+  py::bytes rv;
+  py::size_t i;
+  signed char *ncp;
+  int j = 0;
+
+  audioop_check_size(width);
+  if (frag.size > PY_SSIZE_T_MAX / width)
+    throw py::buffer_error("not enough memory for output buffer");
+
+  try {
+    ncp = new signed char[frag.size * width];
+  } catch (const std::bad_alloc &e) {
+    std::cerr << "Memory allocation failed: " << e.what() << std::endl;
+    throw py::buffer_error("Memory allocation failed");
+  }
+
+  for (i = 0; i < frag.size * width; i += width) {
+    int temp = GETINT8(frag.ptr, j++);
+    int val = st_alaw2linear16(temp) << 16;
+    SETSAMPLE32(width, ncp, i, val);
+  }
+
+  rv = py::bytes(reinterpret_cast<const char *>(ncp), frag.size * width);
+  delete[] ncp;
+  return rv;
+}
+
+// Not implemented
+static py::bytes audioop_lin2adpcm_impl(py::buffer *fragment, int width,
+                                        py::object state);
+
+// Not implemented
+static py::bytes audioop_adpcm2lin_impl(py::buffer *fragment, int width,
+                                        py::object state);
+
+PYBIND11_MODULE(_audioop, m) {
+  m.doc() = R"pbdoc(
+        Audioop module
+        -----------------------
+
+        .. currentmodule:: _audioop
+
+        .. autosummary::
+           :toctree: _generate
+
+           add
+           subtract
+    )pbdoc";
+
+  m.def("_add", &audioop_add_impl, "");
+  // m.def("_adpcm2lin", &audioop_adpcm2lin_impl, "");
+  m.def("_alaw2lin", &audioop_alaw2lin_impl, "");
+  m.def("_get_sample", &audioop_getsample_impl, "");
+  m.def("_findmax", &audioop_findmax_impl, "");
+  m.def("_mul", &audioop_mul_impl, "");
+  m.def("_ulaw2lin", &audioop_ulaw2lin_impl, "");
+
+#ifdef VERSION_INFO
+  m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);
+#else
+  m.attr("__version__") = "dev";
+#endif
+}
