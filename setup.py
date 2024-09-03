@@ -31,7 +31,7 @@ class CMakeBuild(build_ext):
         debug = int(os.environ.get("DEBUG", 0)) if self.debug is None else self.debug
         cfg = "Debug" if debug else "Release"
 
-        cmake_generator = os.environ.get("CMAKE_GENERATOR", "")
+        cmake_generator = os.environ.get("CMAKE_GENERATOR", "make")
         cmake_args = [
             f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={extdir}{os.sep}",
             f"-DPYTHON_EXECUTABLE={sys.executable}",
@@ -55,6 +55,7 @@ class CMakeBuild(build_ext):
                     import ninja
 
                     ninja_executable_path = Path(ninja.BIN_DIR) / "ninja"
+                    print(ninja_executable_path)
                     cmake_args += [
                         "-GNinja",
                         f"-DCMAKE_MAKE_PROGRAM:FILEPATH={ninja_executable_path}",
@@ -109,7 +110,7 @@ class CMakeBuild(build_ext):
         )
 
 setup(
-    name="audio",
+    name="python-audio",
     version="0.1.0",
     ext_modules=[CMakeExtension("_audioop")],
     packages=find_packages(where="src", exclude=["tests", "src/*.egg-info"]),
