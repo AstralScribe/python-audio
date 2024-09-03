@@ -1,0 +1,27 @@
+[project]
+name = "python-audio"
+version = "0.1.0"
+description = "Package for working on audio in python"
+authors = [
+    { name = "Mayank Sinha", email = "sinha.mayank900@gmail.com" }
+]
+readme = "README.md"
+requires-python = ">= 3.10"
+dependencies = [
+    "setuptools>=42",
+    "ninja>=1.11.1.1",
+]
+
+[project.urls]
+repository = "https://github.com/AstralScribe/python-audio.git"
+
+[build-system]
+requires = ["setuptools>=42", "wheel", "ninja", "cmake>=3.12"]
+build-backend = "setuptools.build_meta"
+
+[tool.pyright]
+typeCheckingMode = "off"
+
+
+[tool.rye]
+python-version = "3.11"
