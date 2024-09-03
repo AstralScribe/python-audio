@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.4...3.18)
 project(_audioop)
+
 add_subdirectory(pybind11)
+
 pybind11_add_module(_audioop lib/audioop.cpp)
 target_compile_definitions(_audioop PRIVATE VERSION_INFO="0.1.0")

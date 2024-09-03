@@ -1,6 +1,7 @@
 import audioop
 import random
-import audio.audioop as aup
+import audio.op as aup
+
 
 test_value = random.randbytes(1000)
 test_width = 2

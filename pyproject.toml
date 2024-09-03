@@ -1,0 +1,23 @@
+[project]
+name = "python-audio"
+version = "0.1.0"
+description = "Package for working on audio in python"
+authors = [
+    { name = "Mayank Sinha", email = "sinha.mayank900@gmail.com" }
+]
+readme = "README.md"
+requires-python = ">= 3.10"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.rye]
+managed = true
+dev-dependencies = []
+
+
+
+[tool.pyright]
+typeCheckingMode = "off"
+
