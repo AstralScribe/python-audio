@@ -7,17 +7,21 @@ authors = [
 ]
 readme = "README.md"
 requires-python = ">= 3.10"
+dependencies = [
+    "pybind11>=2.13.5",
+    "setuptools>=74.1.0",
+]
+
+[project.urls]
+repository = "https://github.com/AstralScribe/python-audio.git"
 
 [build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
-
-[tool.rye]
-managed = true
-dev-dependencies = []
-
-
+requires = ["setuptools", "pybind11"]
+build-backend = "setuptools.build_meta"
 
 [tool.pyright]
 typeCheckingMode = "off"
 
+
+[tool.rye]
+python-version = "3.11"

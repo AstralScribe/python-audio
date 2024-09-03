@@ -1,5 +1,5 @@
 from typing import Optional
-from . import _audioop
+import _audioop
 
 def add(fragment1: bytes, fragment2: bytes, width: int) -> bytes:
     return _audioop._add(fragment1, fragment2, width)
