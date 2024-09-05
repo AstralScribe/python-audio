@@ -51,7 +51,7 @@ def lin2ulaw(fragment: bytes, width: int) -> bytes:
     return _audioop._lin2ulaw(fragment, width)
 
 def max(fragment: bytes, width: int) -> int:
-    return _audioop._lin2ulaw(fragment, width)
+    return _audioop._max(fragment, width)
 
 def maxpp(fragment: bytes, width: int) -> int:
     return _audioop._maxpp(fragment, width)
@@ -69,10 +69,10 @@ def reverse(fragment: bytes, width: int) -> bytes:
     return _audioop._reverse(fragment, width)
 
 def rms(fragment: bytes, width: int) -> int:
-    return _audioop._rmx(fragment, width)
+    return _audioop._rms(fragment, width)
 
 def tomono(fragment: bytes, width: int, lfactor: float, rfactor: float) -> bytes:
-    return _audioop._fragment(fragment, width, lfactor, rfactor)
+    return _audioop._tomono(fragment, width, lfactor, rfactor)
 
 def tostereo(fragment: bytes, width: int, lfactor: float, rfactor: float) -> bytes:
     return _audioop._tostereo(fragment, width, lfactor, rfactor)

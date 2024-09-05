@@ -268,9 +268,9 @@ static int audioop_getsample_impl(py::buffer *fragment, int width, int index) {
 }
 
 static py::ssize_t audioop_max_impl(py::buffer *fragment, int width) {
+  py::buffer_info buf = fragment->request();
   py::ssize_t i;
   unsigned int absval, max = 0;
-  py::buffer_info buf = fragment->request();
 
   audioop_check_parameters(buf.size, width);
 
@@ -326,11 +326,11 @@ static int audioop_avg_impl(py::buffer *fragment, int width) {
 }
 
 static unsigned int audioop_rms_impl(py::buffer *fragment, int width) {
+  py::buffer_info buf = fragment->request();
+  py::ssize_t i;
+
   unsigned int rms_val;
   double sum_sqre = 0.0;
-
-  py::ssize_t i;
-  py::buffer_info buf = fragment->request();
 
   audioop_check_parameters(buf.size, width);
 
@@ -343,7 +343,7 @@ static unsigned int audioop_rms_impl(py::buffer *fragment, int width) {
     rms_val = 0;
   } else {
     double num_frames = static_cast<double>(buf.size) / width;
-    rms_val = static_cast<unsigned int>(sum_sqre / num_frames);
+    rms_val = static_cast<unsigned int>(std::sqrt(sum_sqre / num_frames));
   }
 
   return rms_val;
@@ -479,11 +479,11 @@ static unsigned int audioop_avgpp_impl(py::buffer *fragment, int width) {
   prev_val = GETRAWSAMPLE(width, frag.ptr, 0);
   prev_diff = 42;
 
-  for (i = 0; i < frag.size; i += width) {
+  for (i = width; i < frag.size; i += width) {
     int val = GETRAWSAMPLE(width, frag.ptr, i);
     if (val != prev_val) {
       diff = val < prev_val;
-      if (prev_diff != diff) {
+      if (prev_diff == !diff) {
         if (prev_extreme_valid) {
           if (prev_val < prev_extreme)
             sum += static_cast<double>(static_cast<unsigned int>(prev_extreme) -
@@ -601,6 +601,7 @@ static py::bytes audioop_tomono_impl(py::buffer *fragment, int width,
   double maxval, minval;
   py::bytes rv;
 
+  // cp = static_cast<signed char *>(frag.ptr);
   len = frag.size;
   audioop_check_parameters(len, width);
   if (((len / width) & 1) != 0)
@@ -617,9 +618,9 @@ static py::bytes audioop_tomono_impl(py::buffer *fragment, int width,
   }
 
   for (i = 0; i < len; i += width * 2) {
-    double val1 = GETRAWSAMPLE(width, cp, i);
-    double val2 = GETRAWSAMPLE(width, cp, i + width);
-    double val = val * lfactor + val * rfactor;
+    double val1 = GETRAWSAMPLE(width, frag.ptr, i);
+    double val2 = GETRAWSAMPLE(width, frag.ptr, i + width);
+    double val = val1 * lfactor + val2 * rfactor;
     int ival = fbound(val, minval, maxval);
     SETRAWSAMPLE(width, ncp, i / 2, ival);
   }
@@ -889,6 +890,7 @@ static py::bytes audioop_lin2ulaw_impl(py::buffer *fragment, int width) {
   py::bytes rv;
   unsigned char *ncp;
   py::size_t i;
+  int j = 0;
 
   audioop_check_parameters(frag.size, width);
 
@@ -901,7 +903,8 @@ static py::bytes audioop_lin2ulaw_impl(py::buffer *fragment, int width) {
 
   for (i = 0; i < frag.size; i += width) {
     int val = GETSAMPLE32(width, frag.ptr, i);
-    *ncp++ = st_14linear2ulaw(val >> 18);
+    ncp[j] = st_14linear2ulaw(val >> 18);
+    j++;
   }
 
   rv = py::bytes(reinterpret_cast<const char *>(ncp), frag.size / width);
@@ -914,6 +917,7 @@ static py::bytes audioop_ulaw2lin_impl(py::buffer *fragment, int width) {
   py::bytes rv;
   py::size_t i;
   signed char *ncp;
+  unsigned char *cp;
   int j = 0;
 
   audioop_check_size(width);
@@ -927,10 +931,9 @@ static py::bytes audioop_ulaw2lin_impl(py::buffer *fragment, int width) {
     throw py::buffer_error("Memory allocation failed");
   }
 
-  // cp = frag.ptr;
+  cp = static_cast<unsigned char *>(frag.ptr);
   for (i = 0; i < frag.size * width; i += width) {
-    int temp = GETINT8(frag.ptr, j++);
-    int val = st_ulaw2linear16(temp) << 16;
+    int val = st_ulaw2linear16(*cp++) << 16;
     SETSAMPLE32(width, ncp, i, val);
   }
 
@@ -944,6 +947,7 @@ static py::bytes audioop_lin2alaw_impl(py::buffer *fragment, int width) {
   py::bytes rv;
   unsigned char *ncp;
   py::size_t i;
+  int j = 0;
 
   audioop_check_parameters(frag.size, width);
 
@@ -956,7 +960,8 @@ static py::bytes audioop_lin2alaw_impl(py::buffer *fragment, int width) {
 
   for (i = 0; i < frag.size; i += width) {
     int val = GETSAMPLE32(width, frag.ptr, i);
-    *ncp++ = st_linear2alaw(val >> 19);
+    ncp[j] = st_linear2alaw(val >> 19);
+    j++;
   }
 
   rv = py::bytes(reinterpret_cast<const char *>(ncp), frag.size / width);
@@ -969,6 +974,7 @@ static py::bytes audioop_alaw2lin_impl(py::buffer *fragment, int width) {
   py::bytes rv;
   py::size_t i;
   signed char *ncp;
+  unsigned char *cp;
   int j = 0;
 
   audioop_check_size(width);
@@ -981,10 +987,11 @@ static py::bytes audioop_alaw2lin_impl(py::buffer *fragment, int width) {
     std::cerr << "Memory allocation failed: " << e.what() << std::endl;
     throw py::buffer_error("Memory allocation failed");
   }
+  cp = static_cast<unsigned char *>(frag.ptr);
 
   for (i = 0; i < frag.size * width; i += width) {
-    int temp = GETINT8(frag.ptr, j++);
-    int val = st_alaw2linear16(temp) << 16;
+    // int temp = GETINT8(frag.ptr, j++);
+    int val = st_alaw2linear16(*cp++) << 16;
     SETSAMPLE32(width, ncp, i, val);
   }
 
@@ -1026,7 +1033,7 @@ PYBIND11_MODULE(_audioop, m) {
   m.def("_findfactor", &audioop_findfactor_impl, "");
   m.def("_findfit", &audioop_findfit_impl, "");
   m.def("_findmax", &audioop_findmax_impl, "");
-  m.def("_get_sample", &audioop_getsample_impl, "");
+  m.def("_getsample", &audioop_getsample_impl, "");
   // m.def("_lin2adpcm", &audioop_lin2adpcm_impl, "");
   m.def("_lin2alaw", &audioop_lin2alaw_impl, "");
   m.def("_lin2lin", &audioop_lin2lin_impl, "");
