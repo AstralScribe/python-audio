@@ -1012,14 +1012,7 @@ PYBIND11_MODULE(_audioop, m) {
   m.doc() = R"pbdoc(
         Audioop module
         -----------------------
-
         .. currentmodule:: _audioop
-
-        .. autosummary::
-           :toctree: _generate
-
-           add
-           subtract
     )pbdoc";
 
   m.def("_add", &audioop_add_impl, "");
