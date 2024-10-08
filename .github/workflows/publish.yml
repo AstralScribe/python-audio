@@ -36,7 +36,7 @@ jobs:
       - name: Install pybind11
         run: pip install "pybind11[global]"
 
-      - name: Build a binary wheel and a source tarball
+      - name: Build a source tarball
         run: python -m build --sdist --outdir dist/
 
       - name: Publish distribution 📦 to PyPI
