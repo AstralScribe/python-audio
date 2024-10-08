@@ -30,12 +30,6 @@ jobs:
       - name: Install pip
         run: python -m pip install --upgrade pip
 
-      - name: Install black
-        run: pip install black
-
-      - name: Run black
-        run: black .
-
       - name: Install build
         run: python -m pip install build
 
