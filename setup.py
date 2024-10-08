@@ -115,5 +115,6 @@ setup(
     ext_modules=[CMakeExtension("_audioop")],
     packages=find_packages(where="src", exclude=["tests", "src/*.egg-info"]),
     package_dir={"":"src"},
+    platforms="any",
     cmdclass={"build_ext": CMakeBuild},
 )
