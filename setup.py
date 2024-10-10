@@ -27,7 +27,6 @@ class CMakeBuild(build_ext):
         ext_fullpath = Path.cwd() / self.get_ext_fullpath(ext.name)
         extdir = ext_fullpath.parent.resolve()
 
-
         debug = int(os.environ.get("DEBUG", 0)) if self.debug is None else self.debug
         cfg = "Debug" if debug else "Release"
 
@@ -109,12 +108,12 @@ class CMakeBuild(build_ext):
             ["cmake", "--build", ".", *build_args], cwd=build_temp, check=True
         )
 
+
 setup(
     name="python-audio",
     version="0.1.0",
     ext_modules=[CMakeExtension("_audioop")],
     packages=find_packages(where="src", exclude=["tests", "src/*.egg-info"]),
-    package_dir={"":"src"},
-    platforms="any",
+    package_dir={"": "src"},
     cmdclass={"build_ext": CMakeBuild},
 )
