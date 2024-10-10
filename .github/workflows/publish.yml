@@ -38,7 +38,7 @@ jobs:
       - name: Build sdist & wheel
         run: |
           python3 -m pip install setuptools wheel cmake pybind11 build
-          python3 -m build
+          python3 -m build --sdist
         env:
           BUILD_EXTENSION: no
 
