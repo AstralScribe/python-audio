@@ -26,7 +26,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: "3.10"
 
       - name: Install/Upgrade pip
         run: python3 -m pip install --upgrade pip
@@ -50,8 +50,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-13, macos-14]
-        python-version: [3.11, 3.12]
+        os: [ubuntu-latest, windows-latest, macos-13, macos-latest]
 
     steps:
       - uses: actions/checkout@v4
@@ -59,7 +58,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: "3.10"
 
       - name: Install/Upgrade pip
         run: python3 -m pip install --upgrade pip
@@ -73,7 +72,6 @@ jobs:
       - name: Build wheels
         run: python3 -m cibuildwheel --output-dir dist
         env:
-          CIBW_MANYLINUX_X86_64_IMAGE: manylinux1
           CIBW_BEFORE_BUILD: "pip install 'pybind11[global]'"
           CIBW_SKIP: "*musllinux*"
 
