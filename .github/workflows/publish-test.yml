@@ -1,0 +1,46 @@
+name: python-audio
+
+on:
+  release:
+    types: [created]
+  workflow_dispatch:
+    inputs:
+      logLevel:
+        description: "Log level"
+        required: true
+        default: "warning"
+        type: choice
+        options:
+          - info
+          - warning
+          - debug
+
+jobs:
+  build-n-publish:
+    name: python-audio
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.12
+
+      - name: Install pip
+        run: python -m pip install --upgrade pip
+
+      - name: Install build
+        run: python -m pip install build
+
+      - name: Install pybind11
+        run: pip install "pybind11[global]"
+
+      - name: Build a source tarball
+        run: python -m build --sdist --outdir dist/
+
+      - name: Publish distribution 📦 to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_API_TOKEN }}

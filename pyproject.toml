@@ -16,7 +16,7 @@ dependencies = [
 repository = "https://github.com/AstralScribe/python-audio.git"
 
 [build-system]
-requires = ["setuptools>=42", "wheel", "ninja", "cmake>=3.12", "pybind11"]
+requires = ["setuptools>=42"]
 build-backend = "setuptools.build_meta"
 
 [tool.pyright]
