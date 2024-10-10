@@ -1,6 +1,6 @@
 [project]
 name = "python-audio"
-version = "0.1.0"
+version = "0.1.1"
 description = "Package for working on audio in python"
 authors = [
     { name = "Mayank Sinha", email = "sinha.mayank900@gmail.com" }
@@ -9,7 +9,6 @@ readme = "README.md"
 requires-python = ">= 3.10"
 dependencies = [
     "setuptools>=42",
-    "ninja>=1.11.1.1",
 ]
 
 [project.urls]
