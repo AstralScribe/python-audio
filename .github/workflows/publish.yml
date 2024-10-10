@@ -42,7 +42,7 @@ jobs:
       - name: Store the distribution packages
         uses: actions/upload-artifact@v4
         with:
-          name: python-package-distributions
+          name: python-package-distributions-tar
           path: dist/*.tar.gz
 
   build_wheels:
@@ -78,7 +78,7 @@ jobs:
       - name: Store the distribution packages
         uses: actions/upload-artifact@v4
         with:
-          name: python-package-distributions
+          name: python-package-distributions-wheel
           path: dist/
 
   publish-to-pypi:
