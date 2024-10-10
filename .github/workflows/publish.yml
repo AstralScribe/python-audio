@@ -20,7 +20,6 @@ jobs:
   create_sdist:
     runs-on: ubuntu-latest
     name: Create Source Distribution
-    needs: get_next_version
     steps:
       - uses: actions/checkout@v4
 
