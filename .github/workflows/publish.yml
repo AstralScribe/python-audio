@@ -85,7 +85,7 @@ jobs:
     name: >-
       Publish Python 🐍 distribution 📦 to PyPI
     needs:
-      - build
+      - build_wheels
     runs-on: ubuntu-latest
     environment:
       name: release
@@ -145,7 +145,7 @@ jobs:
   publish-to-testpypi:
     name: Publish Python 🐍 distribution 📦 to TestPyPI
     needs:
-      - build
+      - build_wheels
     runs-on: ubuntu-latest
 
     environment:
