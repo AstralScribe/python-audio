@@ -32,7 +32,7 @@ jobs:
         run: python3 -m pip install --upgrade pip
 
       - name: Install pybind11
-        run: pip install "pybind11[global]"
+        run: python3 -m pip install "pybind11[global]"
 
       - name: Create Source Distribution
         run: |
@@ -72,7 +72,7 @@ jobs:
       - name: Build wheels
         run: python3 -m cibuildwheel --output-dir dist
         env:
-          CIBW_BEFORE_BUILD: "pip install 'pybind11[global]'"
+          CIBW_BEFORE_BUILD: "python3 -m pip install pybind11[global]"
           CIBW_SKIP: "*musllinux*"
 
       - name: Store the distribution packages
