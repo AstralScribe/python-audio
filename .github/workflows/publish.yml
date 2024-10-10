@@ -17,33 +17,33 @@ on:
           - debug
 
 jobs:
-  create_sdist:
-    runs-on: ubuntu-latest
-    name: Create Source Distribution
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.10"
-
-      - name: Install/Upgrade pip
-        run: python3 -m pip install --upgrade pip
-
-      - name: Install pybind11
-        run: python3 -m pip install "pybind11[global]"
-
-      - name: Create Source Distribution
-        run: |
-          python3 -m pip install setuptools wheel twine cmake pybind11
-          python3 setup.py sdist
-
-      - name: Store the distribution packages
-        uses: actions/upload-artifact@v4
-        with:
-          name: python-package-distributions-tar
-          path: dist/*.tar.gz
+  # create_sdist:
+  #   runs-on: ubuntu-latest
+  #   name: Create Source Distribution
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #
+  #     - name: Set up Python
+  #       uses: actions/setup-python@v5
+  #       with:
+  #         python-version: "3.10"
+  #
+  #     - name: Install/Upgrade pip
+  #       run: python3 -m pip install --upgrade pip
+  #
+  #     - name: Install pybind11
+  #       run: python3 -m pip install "pybind11[global]"
+  #
+  #     - name: Create Source Distribution
+  #       run: |
+  #         python3 -m pip install setuptools wheel twine cmake pybind11
+  #         python3 setup.py sdist
+  #
+  #     - name: Store the distribution packages
+  #       uses: actions/upload-artifact@v4
+  #       with:
+  #         name: python-package-distributions-tar
+  #         path: dist/*.tar.gz
 
   build_wheels:
     name: Build wheels on ${{ matrix.os }}
