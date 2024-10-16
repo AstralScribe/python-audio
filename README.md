@@ -5,10 +5,14 @@ Future plan is to make it a one-stop solution for anything audio related for pyt
 
 ## How to use?
 
-Currently only the following, method is supported.
+Install using one of the methods below.
 
 ```bash
 pip install git+https://github.com/AstralScribe/python-audio.git
+```
+
+```bash
+pip install python-audio
 ```
 
 ## Available features:
