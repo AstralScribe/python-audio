@@ -22,6 +22,7 @@ class AudioFragment {
 
  public:
   std::vector<int16_t> get_array_of_fragment();
+  py::bytes get_audio(std::string format);
   int get_sampling_rate();
   int get_width();
   int get_channels();
