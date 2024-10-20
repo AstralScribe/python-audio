@@ -1,0 +1,3 @@
+/home/mayank/Documents/dev-hub/python-audio/cmake/CMakeFiles/_audioop.dir
+/home/mayank/Documents/dev-hub/python-audio/cmake/CMakeFiles/edit_cache.dir
+/home/mayank/Documents/dev-hub/python-audio/cmake/CMakeFiles/rebuild_cache.dir

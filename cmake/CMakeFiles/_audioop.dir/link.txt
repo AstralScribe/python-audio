@@ -1,0 +1,1 @@
+/usr/bin/c++ -fPIC -flto -shared  -o _audioop.cpython-311-x86_64-linux-gnu.so CMakeFiles/_audioop.dir/lib/audioop.cpp.o

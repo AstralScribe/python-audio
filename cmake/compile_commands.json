@@ -1,0 +1,8 @@
+[
+{
+  "directory": "/home/mayank/Documents/dev-hub/python-audio/cmake",
+  "command": "/usr/bin/c++ -DVERSION_INFO=\"\\\"\\$$VERSION_INFO\\\"\" -D_audioop_EXPORTS -I/home/mayank/Documents/dev-hub/python-audio/include -isystem /home/mayank/.local/share/uv/python/cpython-3.11.8-linux-x86_64-gnu/include/python3.11 -std=gnu++17 -fPIC -fvisibility=hidden -flto -fno-fat-lto-objects -o CMakeFiles/_audioop.dir/lib/audioop.cpp.o -c /home/mayank/Documents/dev-hub/python-audio/lib/audioop.cpp",
+  "file": "/home/mayank/Documents/dev-hub/python-audio/lib/audioop.cpp",
+  "output": "CMakeFiles/_audioop.dir/lib/audioop.cpp.o"
+}
+]

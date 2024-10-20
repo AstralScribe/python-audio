@@ -1,6 +1,6 @@
 [project]
 name = "python-audio"
-version = "0.1.1"
+version = "0.2.0"
 description = "Package for working on audio in python"
 authors = [
     { name = "Mayank Sinha", email = "sinha.mayank900@gmail.com" }
@@ -22,3 +22,7 @@ build-backend = "setuptools.build_meta"
 
 [tool.pyright]
 typeCheckingMode = "off"
+
+
+[tool.ruff]
+line-length = 120
