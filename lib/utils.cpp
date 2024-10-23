@@ -37,19 +37,3 @@ static std::vector<float> resample(const std::vector<float> &val, int orig_sr,
   }
   return result;
 }
-
-PYBIND11_MODULE(_audioop, m) {
-  m.doc() = R"pbdoc(
-        Audioop module
-        -----------------------
-        .. currentmodule:: _audioop
-    )pbdoc";
-
-  m.def("resample", &resample, "");
-
-#ifdef VERSION_INFO
-  m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);
-#else
-  m.attr("__version__") = "dev";
-#endif
-}
