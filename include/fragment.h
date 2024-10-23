@@ -9,16 +9,14 @@ namespace fragment {
 
 class AudioFragment {
  private:
-  unsigned char* buffer;
-  size_t size;
+  std::vector<unsigned char> buffer;
   int32_t sampling_rate;
   int16_t width;
   int16_t channels;
-  py::array* audio_fragments;
 
  public:
-  explicit AudioFragment(std::string& filename);
-  explicit AudioFragment(py::buffer* fragment);
+  AudioFragment(const std::string& filename);
+  AudioFragment(py::buffer* raw_audio);
   AudioFragment(py::buffer* fragment, int sampling_rate, int width,
                 int channels);
   ~AudioFragment();
@@ -29,6 +27,7 @@ class AudioFragment {
   int get_sampling_rate();
   int get_width();
   int get_channels();
+  int audio_length();
 };
 
 }  // namespace fragment

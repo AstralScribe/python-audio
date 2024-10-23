@@ -1,19 +1,19 @@
 [
 {
   "directory": "/home/mayank/Documents/dev-hub/python-audio/cmake",
-  "command": "/usr/bin/c++ -DVERSION_INFO=\"\\\"\\$$VERSION_INFO\\\"\" -D_core_EXPORTS -I/home/mayank/Documents/dev-hub/python-audio/include -std=gnu++17 -fPIC -fvisibility=hidden -flto -fno-fat-lto-objects -o CMakeFiles/_core.dir/lib/audioop.cpp.o -c /home/mayank/Documents/dev-hub/python-audio/lib/audioop.cpp",
+  "command": "/usr/bin/c++ -DVERSION_INFO=\"\\\"\\$$VERSION_INFO\\\"\" -D_core_EXPORTS -I/home/mayank/Documents/dev-hub/python-audio/include -isystem /usr/include/python3.12 -std=gnu++17 -fPIC -fvisibility=hidden -flto -fno-fat-lto-objects -o CMakeFiles/_core.dir/lib/audioop.cpp.o -c /home/mayank/Documents/dev-hub/python-audio/lib/audioop.cpp",
   "file": "/home/mayank/Documents/dev-hub/python-audio/lib/audioop.cpp",
   "output": "CMakeFiles/_core.dir/lib/audioop.cpp.o"
 },
 {
   "directory": "/home/mayank/Documents/dev-hub/python-audio/cmake",
-  "command": "/usr/bin/c++ -DVERSION_INFO=\"\\\"\\$$VERSION_INFO\\\"\" -D_core_EXPORTS -I/home/mayank/Documents/dev-hub/python-audio/include -std=gnu++17 -fPIC -fvisibility=hidden -flto -fno-fat-lto-objects -o CMakeFiles/_core.dir/lib/fragment.cpp.o -c /home/mayank/Documents/dev-hub/python-audio/lib/fragment.cpp",
+  "command": "/usr/bin/c++ -DVERSION_INFO=\"\\\"\\$$VERSION_INFO\\\"\" -D_core_EXPORTS -I/home/mayank/Documents/dev-hub/python-audio/include -isystem /usr/include/python3.12 -std=gnu++17 -fPIC -fvisibility=hidden -flto -fno-fat-lto-objects -o CMakeFiles/_core.dir/lib/fragment.cpp.o -c /home/mayank/Documents/dev-hub/python-audio/lib/fragment.cpp",
   "file": "/home/mayank/Documents/dev-hub/python-audio/lib/fragment.cpp",
   "output": "CMakeFiles/_core.dir/lib/fragment.cpp.o"
 },
 {
   "directory": "/home/mayank/Documents/dev-hub/python-audio/cmake",
-  "command": "/usr/bin/c++ -DVERSION_INFO=\"\\\"\\$$VERSION_INFO\\\"\" -D_core_EXPORTS -I/home/mayank/Documents/dev-hub/python-audio/include -std=gnu++17 -fPIC -fvisibility=hidden -flto -fno-fat-lto-objects -o CMakeFiles/_core.dir/lib/main.cpp.o -c /home/mayank/Documents/dev-hub/python-audio/lib/main.cpp",
+  "command": "/usr/bin/c++ -DVERSION_INFO=\"\\\"\\$$VERSION_INFO\\\"\" -D_core_EXPORTS -I/home/mayank/Documents/dev-hub/python-audio/include -isystem /usr/include/python3.12 -std=gnu++17 -fPIC -fvisibility=hidden -flto -fno-fat-lto-objects -o CMakeFiles/_core.dir/lib/main.cpp.o -c /home/mayank/Documents/dev-hub/python-audio/lib/main.cpp",
   "file": "/home/mayank/Documents/dev-hub/python-audio/lib/main.cpp",
   "output": "CMakeFiles/_core.dir/lib/main.cpp.o"
 }
