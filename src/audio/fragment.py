@@ -19,6 +19,8 @@ class AudioFragment:
             assert len(audio) % width == 0, "Number of audio frames should be int."
             self.width = width
 
+        self.bits_per_sample = 16
+
         if self.audio.find("data") != -1:
             if sampling_rate is not None:
                 warnings.warn("Audio has header attached. Resampling to provided audio header")
@@ -44,7 +46,37 @@ class AudioFragment:
 
         return self
 
-    def _create_wav_header(self): ...
+    def _create_wav_header(self):
+        audio_duration = len(self.audio)
+        riff = b"RIFF"  # 32 bytes
+        chunk = (audio_duration + 36).to_bytes(4, "little")
+        wavfmt = b"WAVEfmt "
+        bits16 = (1).to_bytes(4, "little")  # b"\x10\x00\x00\x00"
+        audio_format = (1).to_bytes(2, "little")  # b"\x01\x00"
+        channel_bytes = self.channels.to_bytes(2, "little")
+        sample_rate_bytes = self.sampling_rate.to_bytes(4, "little")
+        byte_rate = (self.sampling_rate * self.channels * self.bits_per_sample / 8).to_bytes(4, "little")
+        bytes_in_frame = (self.channels * self.bits_per_sample / 8).to_bytes(2, "little")
+        bits_per_sample_bytes = self.bits_per_sample.to_bytes(2, "little")
+        data_bytes = b"data"
+        file_size = audio_duration.to_bytes(4, "little")
+
+        header = (
+            riff
+            + chunk
+            + wavfmt
+            + bits16
+            + audio_format
+            + channel_bytes
+            + sample_rate_bytes
+            + byte_rate
+            + bytes_in_frame
+            + bits_per_sample_bytes
+            + data_bytes
+            + file_size
+        )
+
+        return header
 
     def load_format(self, format: str):
         if format == "mulaw":

@@ -1,5 +1,5 @@
 from typing import Optional
-from . import _audioop
+import audio._core.audioop as _audioop
 
 
 def add(fragment1: bytes, fragment2: bytes, width: int) -> bytes:
@@ -8,7 +8,7 @@ def add(fragment1: bytes, fragment2: bytes, width: int) -> bytes:
     width is the sample width in bytes, either 1, 2, 3 or 4.
     Both fragments should have the same length. Samples are truncated in case of overflow.
     """
-    return _audioop._add(fragment1, fragment2, width)
+    return _audioop.add(fragment1, fragment2, width)
 
 
 def adpcm2lin(fragment: bytes, width: int, state: Optional[tuple] = None) -> tuple:
@@ -25,14 +25,14 @@ def alaw2lin(fragment: bytes, width: int) -> bytes:
     Convert sound fragments in a-LAW encoding to linearly encoded sound fragments.
     a-LAW encoding always uses 8 bits samples, so width refers only to the sample width of the output fragment here.
     """
-    return _audioop._alaw2lin(fragment, width)
+    return _audioop.alaw2lin(fragment, width)
 
 
 def avg(fragment: bytes, width: int) -> int:
     """
     Return the average over all samples in the fragment.
     """
-    return _audioop._avg(fragment, width)
+    return _audioop.avg(fragment, width)
 
 
 def avgpp(fragment: bytes, width: int) -> int:
@@ -40,7 +40,7 @@ def avgpp(fragment: bytes, width: int) -> int:
     Return the average peak-peak value over all samples in the fragment.
     No filtering is done, so the usefulness of this routine is questionable.
     """
-    return _audioop._avgpp(fragment, width)
+    return _audioop.avgpp(fragment, width)
 
 
 def bias(fragment: bytes, width: int, bias: int) -> bytes:
@@ -48,7 +48,7 @@ def bias(fragment: bytes, width: int, bias: int) -> bytes:
     Return a fragment that is the original fragment with a bias added to each sample.
     Samples wrap around in case of overflow.
     """
-    return _audioop._bias(fragment, width, bias)
+    return _audioop.bias(fragment, width, bias)
 
 
 def byteswap(fragment: bytes, width: int) -> bytes:
@@ -56,12 +56,12 @@ def byteswap(fragment: bytes, width: int) -> bytes:
     “Byteswap” all samples in a fragment and returns the modified fragment.
     Converts big-endian samples to little-endian and vice versa.
     """
-    return _audioop._byteswap(fragment, width)
+    return _audioop.byteswap(fragment, width)
 
 
 def cross(fragment: bytes, width: int) -> int:
     """Return the number of zero crossings in the fragment passed as an argument."""
-    return _audioop._cross(fragment, width)
+    return _audioop.cross(fragment, width)
 
 
 def findfactor(fragment: bytes, reference: bytes) -> float:
@@ -72,7 +72,7 @@ def findfactor(fragment: bytes, reference: bytes) -> float:
 
     The time taken by this routine is proportional to len(fragment).
     """
-    return _audioop._findfactor(fragment, reference)
+    return _audioop.findfactor(fragment, reference)
 
 
 def findfit(fragment: bytes, reference: bytes) -> tuple[int, float]:
@@ -86,7 +86,7 @@ def findfit(fragment: bytes, reference: bytes) -> tuple[int, float]:
     into fragment where the optimal match started and factor is the (floating-point)
     factor as per findfactor().
     """
-    return _audioop._findfit(fragment, reference)
+    return _audioop.findfit(fragment, reference)
 
 
 def findmax(fragment: bytes, length: int) -> int:
@@ -98,7 +98,7 @@ def findmax(fragment: bytes, length: int) -> int:
     The routine takes time proportional to len(fragment).
 
     """
-    return _audioop._findmax(fragment, length)
+    return _audioop.findmax(fragment, length)
 
 
 def getsample(fragment: bytes, width: int, index: int) -> int:
@@ -106,7 +106,7 @@ def getsample(fragment: bytes, width: int, index: int) -> int:
     Return the value of sample index from the fragment.
 
     """
-    return _audioop._getsample(fragment, width, index)
+    return _audioop.getsample(fragment, width, index)
 
 
 def lin2adpcm(fragment: bytes, width: int, state: Optional[tuple] = None) -> tuple:
@@ -122,7 +122,7 @@ def lin2adpcm(fragment: bytes, width: int, state: Optional[tuple] = None) -> tup
     the next call of lin2adpcm(). In the initial call, None can be passed as the state.
     adpcmfrag is the ADPCM coded fragment packed 2 4-bit values per byte.
     """
-    raise NotImplementedError("Still in development._")
+    raise NotImplementedError("Still in development.")
     # return lin2adpcm(fragment, width, state)
 
 
@@ -132,14 +132,14 @@ def lin2alaw(fragment: bytes, width: int) -> bytes:
     a-LAW is an audio encoding format whereby you get a dynamic range of about 13 bits using
     only 8 bit samples. It is used by the Sun audio hardware, among others.
     """
-    return _audioop._lin2alaw(fragment, width)
+    return _audioop.lin2alaw(fragment, width)
 
 
 def lin2lin(fragment: bytes, width: int, newwidth: int) -> bytes:
     """
     Convert samples between 1-, 2-, 3- and 4-byte formats.
     """
-    return _audioop._lin2lin(fragment, width, newwidth)
+    return _audioop.lin2lin(fragment, width, newwidth)
 
 
 def lin2ulaw(fragment: bytes, width: int) -> bytes:
@@ -148,21 +148,21 @@ def lin2ulaw(fragment: bytes, width: int) -> bytes:
     u-LAW is an audio encoding format whereby you get a dynamic range of about 14 bits using
     only 8 bit samples. It is used by the Sun audio hardware, among others.
     """
-    return _audioop._lin2ulaw(fragment, width)
+    return _audioop.lin2ulaw(fragment, width)
 
 
 def max(fragment: bytes, width: int) -> int:
     """
     Return the maximum of the absolute value of all samples in a fragment.
     """
-    return _audioop._max(fragment, width)
+    return _audioop.max(fragment, width)
 
 
 def maxpp(fragment: bytes, width: int) -> int:
     """
     Return the maximum peak-peak value in the sound fragment.
     """
-    return _audioop._maxpp(fragment, width)
+    return _audioop.maxpp(fragment, width)
 
 
 def minmax(fragment: bytes, width: int) -> tuple[int, int]:
@@ -170,7 +170,7 @@ def minmax(fragment: bytes, width: int) -> tuple[int, int]:
     Return a tuple consisting of the minimum and maximum values
     of all samples in the sound fragment.
     """
-    return _audioop._minmax(fragment, width)
+    return _audioop.minmax(fragment, width)
 
 
 def mul(fragment: bytes, width: int, factor: float) -> bytes:
@@ -179,7 +179,7 @@ def mul(fragment: bytes, width: int, factor: float) -> bytes:
     multiplied by the floating-point value factor.
     Samples are truncated in case of overflow.
     """
-    return _audioop._mul(fragment, width, factor)
+    return _audioop.mul(fragment, width, factor)
 
 
 def ratecv(
@@ -192,14 +192,14 @@ def ratecv(
     weightA: int = 1,
     weightB: int = 0,
 ) -> tuple:
-    raise NotImplementedError("Still in development._")
+    raise NotImplementedError("Still in development.")
 
 
 def reverse(fragment: bytes, width: int) -> bytes:
     """
     Reverse the samples in a fragment and returns the modified fragment.
     """
-    return _audioop._reverse(fragment, width)
+    return _audioop.reverse(fragment, width)
 
 
 def rms(fragment: bytes, width: int) -> int:
@@ -207,7 +207,7 @@ def rms(fragment: bytes, width: int) -> int:
     Return the root-mean-square of the fragment, i.e. sqrt(sum(S_i^2)/n).
     This is a measure of the power in an audio signal.
     """
-    return _audioop._rms(fragment, width)
+    return _audioop.rms(fragment, width)
 
 
 def tomono(fragment: bytes, width: int, lfactor: float, rfactor: float) -> bytes:
@@ -216,7 +216,7 @@ def tomono(fragment: bytes, width: int, lfactor: float, rfactor: float) -> bytes
     multiplied by lfactor and the right channel by rfactor before adding the
     two channels to give a mono signal.
     """
-    return _audioop._tomono(fragment, width, lfactor, rfactor)
+    return _audioop.tomono(fragment, width, lfactor, rfactor)
 
 
 def tostereo(fragment: bytes, width: int, lfactor: float, rfactor: float) -> bytes:
@@ -225,7 +225,7 @@ def tostereo(fragment: bytes, width: int, lfactor: float, rfactor: float) -> byt
     stereo fragment are computed from the mono sample, whereby left channel samples
     are multiplied by lfactor and right channel samples by rfactor.
     """
-    return _audioop._tostereo(fragment, width, lfactor, rfactor)
+    return _audioop.tostereo(fragment, width, lfactor, rfactor)
 
 
 def ulaw2lin(fragment: bytes, width: int) -> bytes:
@@ -234,4 +234,4 @@ def ulaw2lin(fragment: bytes, width: int) -> bytes:
     u-LAW encoding always uses 8 bits samples, so width refers only to the sample width
     of the output fragment here.
     """
-    return _audioop._ulaw2lin(fragment, width)
+    return _audioop.ulaw2lin(fragment, width)
