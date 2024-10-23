@@ -6,8 +6,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 include_directories(include)
+set(SOURCES
+  lib/audioop.cpp
+  lib/fragment.cpp
+  lib/main.cpp
+)
 
 find_package(pybind11 REQUIRED)
-pybind11_add_module(_audioop lib/audioop.cpp)
-pybind11_add_module(_fragment lib/fragment.cpp)
-target_compile_definitions(_audioop PRIVATE VERSION_INFO="$VERSION_INFO")
+pybind11_add_module(_core ${SOURCES})
+target_compile_definitions(_core PRIVATE VERSION_INFO="$VERSION_INFO")

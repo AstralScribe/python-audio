@@ -117,24 +117,24 @@ depend:
 .PHONY : depend
 
 #=============================================================================
-# Target rules for targets named _audioop
+# Target rules for targets named _core
 
 # Build rule for target.
-_audioop: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 _audioop
-.PHONY : _audioop
+_core: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 _core
+.PHONY : _core
 
 # fast build rule for target.
-_audioop/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/_audioop.dir/build.make CMakeFiles/_audioop.dir/build
-.PHONY : _audioop/fast
+_core/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/_core.dir/build.make CMakeFiles/_core.dir/build
+.PHONY : _core/fast
 
 lib/audioop.o: lib/audioop.cpp.o
 .PHONY : lib/audioop.o
 
 # target to build an object file
 lib/audioop.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/_audioop.dir/build.make CMakeFiles/_audioop.dir/lib/audioop.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/_core.dir/build.make CMakeFiles/_core.dir/lib/audioop.cpp.o
 .PHONY : lib/audioop.cpp.o
 
 lib/audioop.i: lib/audioop.cpp.i
@@ -142,7 +142,7 @@ lib/audioop.i: lib/audioop.cpp.i
 
 # target to preprocess a source file
 lib/audioop.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/_audioop.dir/build.make CMakeFiles/_audioop.dir/lib/audioop.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/_core.dir/build.make CMakeFiles/_core.dir/lib/audioop.cpp.i
 .PHONY : lib/audioop.cpp.i
 
 lib/audioop.s: lib/audioop.cpp.s
@@ -150,8 +150,56 @@ lib/audioop.s: lib/audioop.cpp.s
 
 # target to generate assembly for a file
 lib/audioop.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/_audioop.dir/build.make CMakeFiles/_audioop.dir/lib/audioop.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/_core.dir/build.make CMakeFiles/_core.dir/lib/audioop.cpp.s
 .PHONY : lib/audioop.cpp.s
+
+lib/fragment.o: lib/fragment.cpp.o
+.PHONY : lib/fragment.o
+
+# target to build an object file
+lib/fragment.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/_core.dir/build.make CMakeFiles/_core.dir/lib/fragment.cpp.o
+.PHONY : lib/fragment.cpp.o
+
+lib/fragment.i: lib/fragment.cpp.i
+.PHONY : lib/fragment.i
+
+# target to preprocess a source file
+lib/fragment.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/_core.dir/build.make CMakeFiles/_core.dir/lib/fragment.cpp.i
+.PHONY : lib/fragment.cpp.i
+
+lib/fragment.s: lib/fragment.cpp.s
+.PHONY : lib/fragment.s
+
+# target to generate assembly for a file
+lib/fragment.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/_core.dir/build.make CMakeFiles/_core.dir/lib/fragment.cpp.s
+.PHONY : lib/fragment.cpp.s
+
+lib/main.o: lib/main.cpp.o
+.PHONY : lib/main.o
+
+# target to build an object file
+lib/main.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/_core.dir/build.make CMakeFiles/_core.dir/lib/main.cpp.o
+.PHONY : lib/main.cpp.o
+
+lib/main.i: lib/main.cpp.i
+.PHONY : lib/main.i
+
+# target to preprocess a source file
+lib/main.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/_core.dir/build.make CMakeFiles/_core.dir/lib/main.cpp.i
+.PHONY : lib/main.cpp.i
+
+lib/main.s: lib/main.cpp.s
+.PHONY : lib/main.s
+
+# target to generate assembly for a file
+lib/main.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/_core.dir/build.make CMakeFiles/_core.dir/lib/main.cpp.s
+.PHONY : lib/main.cpp.s
 
 # Help Target
 help:
@@ -161,10 +209,16 @@ help:
 	@echo "... depend"
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
-	@echo "... _audioop"
+	@echo "... _core"
 	@echo "... lib/audioop.o"
 	@echo "... lib/audioop.i"
 	@echo "... lib/audioop.s"
+	@echo "... lib/fragment.o"
+	@echo "... lib/fragment.i"
+	@echo "... lib/fragment.s"
+	@echo "... lib/main.o"
+	@echo "... lib/main.i"
+	@echo "... lib/main.s"
 .PHONY : help
 
 

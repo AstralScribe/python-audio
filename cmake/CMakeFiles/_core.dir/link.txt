@@ -1,0 +1,1 @@
+/usr/bin/c++ -fPIC -flto -shared  -o _core.cpython-312-x86_64-linux-gnu.so CMakeFiles/_core.dir/lib/audioop.cpp.o CMakeFiles/_core.dir/lib/fragment.cpp.o CMakeFiles/_core.dir/lib/main.cpp.o

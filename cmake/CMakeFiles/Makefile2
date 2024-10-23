@@ -63,7 +63,7 @@ CMAKE_BINARY_DIR = /home/mayank/Documents/dev-hub/python-audio/cmake
 # Directory level rules for the build root directory
 
 # The main recursive "all" target.
-all: CMakeFiles/_audioop.dir/all
+all: CMakeFiles/_core.dir/all
 .PHONY : all
 
 # The main recursive "preinstall" target.
@@ -71,34 +71,34 @@ preinstall:
 .PHONY : preinstall
 
 # The main recursive "clean" target.
-clean: CMakeFiles/_audioop.dir/clean
+clean: CMakeFiles/_core.dir/clean
 .PHONY : clean
 
 #=============================================================================
-# Target rules for target CMakeFiles/_audioop.dir
+# Target rules for target CMakeFiles/_core.dir
 
 # All Build rule for target.
-CMakeFiles/_audioop.dir/all:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/_audioop.dir/build.make CMakeFiles/_audioop.dir/depend
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/_audioop.dir/build.make CMakeFiles/_audioop.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/mayank/Documents/dev-hub/python-audio/cmake/CMakeFiles --progress-num=1,2 "Built target _audioop"
-.PHONY : CMakeFiles/_audioop.dir/all
+CMakeFiles/_core.dir/all:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/_core.dir/build.make CMakeFiles/_core.dir/depend
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/_core.dir/build.make CMakeFiles/_core.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/mayank/Documents/dev-hub/python-audio/cmake/CMakeFiles --progress-num=1,2,3,4 "Built target _core"
+.PHONY : CMakeFiles/_core.dir/all
 
 # Build rule for subdir invocation for target.
-CMakeFiles/_audioop.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/mayank/Documents/dev-hub/python-audio/cmake/CMakeFiles 2
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/_audioop.dir/all
+CMakeFiles/_core.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/mayank/Documents/dev-hub/python-audio/cmake/CMakeFiles 4
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/_core.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/mayank/Documents/dev-hub/python-audio/cmake/CMakeFiles 0
-.PHONY : CMakeFiles/_audioop.dir/rule
+.PHONY : CMakeFiles/_core.dir/rule
 
 # Convenience name for target.
-_audioop: CMakeFiles/_audioop.dir/rule
-.PHONY : _audioop
+_core: CMakeFiles/_core.dir/rule
+.PHONY : _core
 
 # clean rule for target.
-CMakeFiles/_audioop.dir/clean:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/_audioop.dir/build.make CMakeFiles/_audioop.dir/clean
-.PHONY : CMakeFiles/_audioop.dir/clean
+CMakeFiles/_core.dir/clean:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/_core.dir/build.make CMakeFiles/_core.dir/clean
+.PHONY : CMakeFiles/_core.dir/clean
 
 #=============================================================================
 # Special targets to cleanup operation of make.
