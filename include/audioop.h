@@ -2,9 +2,6 @@
 
 #include <pybind11/pybind11.h>
 
-#define STRINGIFY(x) #x
-#define MACRO_STRINGIFY(x) STRINGIFY(x)
-
 #define PY_SSIZE_T_CLEAN
 #define BIAS 0x84 /* define the add-in bias for 16 bit samples */
 #define CLIP 32635
@@ -183,7 +180,8 @@ constexpr int stepsizeTable[89] = {
       SETINT32((cp), (i), (val));       \
   } while (0)
 
-void audioop_check_size(int size);
-void audioop_check_parameters(int len, int size);
+void check_size(int size);
+void check_parameters(int len, int size);
 
+void _init_submodule_audioop(pybind11::module_ &m);
 #endif  // !__AUDIOOP_CPP_H__

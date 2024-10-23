@@ -1,5 +1,6 @@
 #ifndef __FRAGMENT_CPP_H__
 
+#include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
 
 namespace py = pybind11;
@@ -8,20 +9,22 @@ namespace fragment {
 
 class AudioFragment {
  private:
-  py::buffer* buffer;
-  int sampling_rate;
-  int width;
-  int channels;
-
-  std::vector<int16_t> array;
+  unsigned char* buffer;
+  size_t size;
+  int32_t sampling_rate;
+  int16_t width;
+  int16_t channels;
+  py::array* audio_fragments;
 
  public:
-  explicit AudioFragment(py::buffer* buffer);
-  AudioFragment(py::buffer* buffer, int sampling_rate, int width, int channels);
+  explicit AudioFragment(std::string& filename);
+  explicit AudioFragment(py::buffer* fragment);
+  AudioFragment(py::buffer* fragment, int sampling_rate, int width,
+                int channels);
   ~AudioFragment();
 
  public:
-  std::vector<int16_t> get_array_of_fragment();
+  py::array get_array_of_fragment();
   py::bytes get_audio(std::string format);
   int get_sampling_rate();
   int get_width();
@@ -30,4 +33,5 @@ class AudioFragment {
 
 }  // namespace fragment
 
+void _init_submodule_fragment(pybind11::module_& m);
 #endif  // !__FRAGMENT_CPP_H__
