@@ -2,6 +2,7 @@
 
 #include "audioop.h"
 #include "fragment.h"
+#include "utils.h"
 
 #define STRINGIFY(x) #x
 #define MACRO_STRINGIFY(x) STRINGIFY(x)
@@ -9,6 +10,7 @@
 PYBIND11_MODULE(_core, m) {
   _init_submodule_audioop(m);
   _init_submodule_fragment(m);
+  _init_submodule_utils(m);
 
 #ifdef VERSION_INFO
   m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);

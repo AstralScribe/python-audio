@@ -26,4 +26,4 @@ typeCheckingMode = "off"
 
 
 [tool.ruff]
-line-length = 120
+# line-length = 100

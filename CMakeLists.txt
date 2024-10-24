@@ -9,6 +9,7 @@ include_directories(include)
 set(SOURCES
   lib/audioop.cpp
   lib/fragment.cpp
+  lib/utils.cpp
   lib/main.cpp
 )
 

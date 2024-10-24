@@ -1,5 +1,6 @@
 #include "fragment.h"
 
+#include <algorithm>
 #include <fstream>
 #include <iostream>
 
@@ -70,7 +71,7 @@ AudioFragment::AudioFragment(py::buffer *fragment, int sampling_rate, int width,
 
 AudioFragment::~AudioFragment() {}
 
-py::array AudioFragment::get_array_of_fragment() {
+py::array AudioFragment::get_array_of_fragments() {
   std::vector<int16_t> audio_array;
   int array_size = buffer.size() / width;
   audio_array.reserve(array_size);
@@ -86,6 +87,37 @@ py::array AudioFragment::get_array_of_fragment() {
 int AudioFragment::get_sampling_rate() { return sampling_rate; }
 int AudioFragment::get_width() { return width; }
 int AudioFragment::get_channels() { return channels; }
+
+std::vector<unsigned char> AudioFragment::riff_header() {
+  WAVHeader header;
+  header.sampling_rate = sampling_rate;
+  header.channels = channels;
+  header.sub_chunk2_size = buffer.size();
+
+  header.byte_rate = sampling_rate * channels * header.bits_per_sample / 8;
+  header.block_align = channels * header.bits_per_sample / 8;
+  header.chunk_size = 36 + header.sub_chunk2_size;
+
+  std::vector<unsigned char> wav_header(44);
+  std::memcpy(wav_header.data(), &header, sizeof(WAVHeader));
+
+  return wav_header;
+}
+
+py::bytes AudioFragment::py_riff_header() {
+  py::bytes rv;
+  std::vector<unsigned char> header = riff_header();
+  std::string header_string(header.begin(), header.end());
+  rv = py::bytes(header_string);
+  return rv;
+}
+
+py::bytes AudioFragment::_get_raw_bytes() {
+  py::bytes rv;
+  std::string raw_string(buffer.begin(), buffer.end());
+  rv = py::bytes(raw_string);
+  return rv;
+}
 
 }  // namespace fragment
 
@@ -103,8 +135,10 @@ void _init_submodule_fragment(pybind11::module_ &m) {
            py::arg("audio_buffer"))
       .def(py::init<py::buffer *, int, int, int>(), py::arg("audio_buffer"),
            py::arg("sampling_rate"), py::arg("width"), py::arg("channels"))
-      .def("get_array_of_fragment",
-           &fragment::AudioFragment::get_array_of_fragment, "")
+      .def("get_array_of_fragments",
+           &fragment::AudioFragment::get_array_of_fragments, "")
+      .def("_get_raw_bytes", &fragment::AudioFragment::_get_raw_bytes, "")
+      .def("_create_riff_header", &fragment::AudioFragment::py_riff_header, "")
       .def("get_sampling_rate", &fragment::AudioFragment::get_sampling_rate, "")
       .def("get_width", &fragment::AudioFragment::get_width, "")
       .def("get_channels", &fragment::AudioFragment::get_channels, "");

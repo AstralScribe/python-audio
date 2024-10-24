@@ -37,3 +37,7 @@ static std::vector<float> resample(const std::vector<float> &val, int orig_sr,
   }
   return result;
 }
+
+void _init_submodule_utils(pybind11::module_ &m) {
+  auto m_a = m.def_submodule("utils", "Basic audio utilities");
+}

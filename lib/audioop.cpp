@@ -376,7 +376,6 @@ py::size_t cross_impl(py::buffer *fragment, int width) {
   return ncross;
 }
 
-// Function generating wrong values
 py::bytes mul_impl(py::buffer *fragment, int width, double factor) {
   py::buffer_info frag = fragment->request();
   py::size_t i;
@@ -416,7 +415,6 @@ py::bytes tomono_impl(py::buffer *fragment, int width, double lfactor,
   double maxval, minval;
   py::bytes rv;
 
-  // cp = static_cast<signed char *>(frag.ptr);
   len = frag.size;
   check_parameters(len, width);
   if (((len / width) & 1) != 0)
@@ -472,8 +470,8 @@ py::bytes tostereo_impl(py::buffer *fragment, int width, double lfactor,
     double val = GETRAWSAMPLE(width, frag.ptr, i);
     int val1 = fbound(val * lfactor, minval, maxval);
     int val2 = fbound(val * rfactor, minval, maxval);
-    SETRAWSAMPLE(width, ncp, i * 2, val1);          // Possible error source
-    SETRAWSAMPLE(width, ncp, i * 2 + width, val2);  // Possible error source
+    SETRAWSAMPLE(width, ncp, i * 2, val1);
+    SETRAWSAMPLE(width, ncp, i * 2 + width, val2);
   }
 
   rv = py::bytes(reinterpret_cast<const char *>(ncp), frag.size * 2);
@@ -660,12 +658,11 @@ py::bytes lin2lin_impl(py::buffer *fragment, int width, int newwidth) {
   return rv;
 }
 
-// Not implemented yet
-py::bytes ratecv_impl(py::buffer *fragment, int width, int nchannels,
+py::tuple ratecv_impl(py::buffer *fragment, int width, int nchannels,
                       int inrate, int outrate, py::object *state, int weightA,
                       int weightB) {
   py::buffer_info frag = fragment->request();
-  py::bytes samps, str, rv, channel;
+  py::bytes samps, rv, channel;
   py::size_t len;
   char *ncp, *cp;
   int chan, d, cur_o, bytes_per_frame;
@@ -695,7 +692,7 @@ py::bytes ratecv_impl(py::buffer *fragment, int width, int nchannels,
   std::vector<int> prev_i, cur_i;
   prev_i.reserve(nchannels);
   cur_i.reserve(nchannels);
-  len = frag.size / bytes_per_frame; /* # of frames */
+  len = frag.size / bytes_per_frame;
 
   if (state->is_none()) {
     d = -outrate;
@@ -712,22 +709,18 @@ py::bytes ratecv_impl(py::buffer *fragment, int width, int nchannels,
     if (samps.size() != nchannels) {
       throw std::runtime_error("illegal state argument");
     }
-    for (int chan = 0; chan < nchannels; chan++) {
+    for (chan = 0; chan < nchannels; chan++) {
       py::tuple channel_state = samps[chan].cast<py::tuple>();
       prev_i[chan] = py::cast<int>(channel_state[0]);
       cur_i[chan] = py::cast<int>(channel_state[1]);
     }
   }
 
-  int q = 1 + (frag.size - 1) / inrate;
+  size_t q = std::ceil(frag.size / inrate);
+  size_t buffer_size = q * outrate * bytes_per_frame;
+  std::vector<char> str(buffer_size);
 
-  try {
-    ncp = new char[q * outrate * bytes_per_frame];
-  } catch (const std::bad_alloc &e) {
-    std::cerr << "Memory allocation failed: " << e.what() << std::endl;
-    throw py::buffer_error("Memory allocation failed");
-  }
-
+  ncp = str.data();
   cp = static_cast<char *>(frag.ptr);
 
   for (;;) {
@@ -737,14 +730,34 @@ py::bytes ratecv_impl(py::buffer *fragment, int width, int nchannels,
         for (chan = 0; chan < nchannels; chan++) {
           result_state[chan] = py::make_tuple(prev_i[chan], cur_i[chan]);
         }
+        ssize_t result_size = ncp - str.data();
+        return py::make_tuple(py::bytes(str.data(), result_size),
+                              py::make_tuple(d, result_state));
       }
+      for (chan = 0; chan < nchannels; chan++) {
+        prev_i[chan] = cur_i[chan];
+        cur_i[chan] = GETSAMPLE32(width, cp, 0);
+        cp += width;
+        cur_i[chan] =
+            static_cast<int>((static_cast<double>(weightA) * cur_i[chan] +
+                              static_cast<double>(weightB) * prev_i[chan]) /
+                             (weightA + weightB));
+      }
+      len--;
+      d += outrate;
+    }
+    while (d >= 0) {
+      for (chan = 0; chan < nchannels; chan++) {
+        cur_o = static_cast<int>(
+            (static_cast<double>(prev_i[chan]) * d +
+             static_cast<double>(cur_i[chan]) * (outrate - d)) /
+            outrate);
+        SETSAMPLE32(width, ncp, 0, cur_o);
+        ncp += width;
+      }
+      d -= inrate;
     }
   }
-
-  rv = py::bytes(reinterpret_cast<const char *>(ncp),
-                 q * outrate * bytes_per_frame);
-  delete[] ncp;
-  return rv;
 }
 
 py::bytes lin2ulaw_impl(py::buffer *fragment, int width) {
@@ -863,10 +876,10 @@ py::bytes alaw2lin_impl(py::buffer *fragment, int width) {
 }
 
 // Not implemented
-py::bytes lin2adpcm_impl(py::buffer *fragment, int width, py::object state);
+py::bytes lin2adpcm_impl(py::buffer *fragment, int width, py::object *state);
 
 // Not implemented
-py::bytes adpcm2lin_impl(py::buffer *fragment, int width, py::object state);
+py::bytes adpcm2lin_impl(py::buffer *fragment, int width, py::object *state);
 
 void _init_submodule_audioop(py::module_ &m) {
   auto m_a =
@@ -892,7 +905,7 @@ void _init_submodule_audioop(py::module_ &m) {
   m_a.def("maxpp", &maxpp_impl, "");
   m_a.def("minmax", &minmax_impl, "");
   m_a.def("mul", &mul_impl, "");
-  // m_a.def("ratecv", &ratecv_impl, "");
+  m_a.def("ratecv", &ratecv_impl, "");
   m_a.def("reverse", &reverse_impl, "");
   m_a.def("rms", &rms_impl, "");
   m_a.def("tomono", &tomono_impl, "");

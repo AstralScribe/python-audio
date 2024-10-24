@@ -192,7 +192,17 @@ def ratecv(
     weightA: int = 1,
     weightB: int = 0,
 ) -> tuple:
-    raise NotImplementedError("Still in development.")
+    """
+    Convert the frame rate of the input fragment.
+    state is a tuple containing the state of the converter.
+    The converter returns a tuple (newfragment, newstate), and newstate should be passed to the next call of ratecv().
+    The initial call should pass None as the state.
+    The weightA and weightB arguments are parameters for a simple digital filter and default to 1 and 0 respectively.
+
+    """
+    return _audioop.ratecv(
+        fragment, width, nchannels, inrate, outrate, state, weightA, weightB
+    )
 
 
 def reverse(fragment: bytes, width: int) -> bytes:
