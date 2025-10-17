@@ -27,7 +27,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
-          python-version: 3.14
+          python-version: 3.x
 
       - name: Install/Upgrade pip
         run: python3 -m pip install --upgrade pip
@@ -63,7 +63,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
-          python-version: 3.14
+          python-version: 3.x
 
       - name: Install/Upgrade pip
         run: python3 -m pip install --upgrade pip
@@ -78,7 +78,7 @@ jobs:
           platforms: all
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.21.3
+        uses: pypa/cibuildwheel@v3.2.1
         env:
           BUILD_EXTENSION: yes
           CIBW_BEFORE_BUILD: "python3 -m pip install pybind11[global]"
