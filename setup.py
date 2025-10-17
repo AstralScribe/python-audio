@@ -111,7 +111,7 @@ class CMakeBuild(build_ext):
 
 setup(
     name="python-audio",
-    version="0.1.0",
+    version="0.1.2",
     ext_modules=[CMakeExtension("_audioop")],
     packages=find_packages(where="src", exclude=["tests", "src/*.egg-info"]),
     package_dir={"": "src"},
